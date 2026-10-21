@@ -1,0 +1,30 @@
+User-agent: Yandex
+Disallow: /*?s=
+Disallow: /admin
+Disallow: /pay/
+Disallow: /profile/
+Disallow: /debug/
+Disallow: /debug*/*
+Allow: *.js
+Allow: *.css
+Allow: *.png
+Allow: *.jpeg
+Allow: *.jpg
+Allow: *.webp
+Clean-param: etext&__cf_chl_tk&__cf_chl_rt_tk&cashbackState&src_pof&page&rid&yadiscount&yprqee&amp&C&O&ydqpqlil&pttecfcd13e&cno9dx6t82&site&admin_dir&act&case
+
+User-agent: *
+Disallow: /*?s=
+Disallow: /admin
+Disallow: /pay/
+Disallow: /profile/
+Disallow: /debug/
+Disallow: /debug*/*
+Allow: *.js
+Allow: *.css
+Allow: *.png
+Allow: *.jpeg
+Allow: *.jpg
+Allow: *.webp
+
+Sitemap: https://millex.market/sitemap.xml

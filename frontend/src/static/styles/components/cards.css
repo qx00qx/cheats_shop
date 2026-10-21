@@ -1,0 +1,93 @@
+
+.card {
+  background: linear-gradient(
+    135deg,
+    rgba(10, 13, 11, 0.6) 0%,
+    rgba(6, 9, 8, 0.8) 100%
+  );
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  color: inherit;
+  text-decoration: none;
+  transition: all var(--t-fast);
+}
+
+.card:hover {
+  border-color: rgba(0, 255, 163, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 24px rgba(0, 255, 163, 0.06);
+}
+
+/* Карточка товара в каталоге */
+.product-card-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+.product-card-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  margin-top: 12px;
+  color: var(--text-muted);
+}
+
+.rating {
+  color: var(--accent-green);
+  font-weight: 600;
+}
+
+/* Chip-фильтры */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all var(--t-fast);
+  font-family: inherit;
+}
+
+.chip:hover {
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+}
+
+.chip.active {
+  background: rgba(0, 255, 163, 0.08);
+  color: var(--accent-green);
+  border-color: var(--accent-green);
+}
+
+/* Сетка товаров */
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 900px) {
+  .grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}

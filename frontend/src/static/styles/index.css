@@ -1,0 +1,49 @@
+/* Шрифты из старого проекта */
+@import './fonts.css';
+@import './local-fonts.css';
+
+/* Основные стили */
+@import './variables.css';
+@import './base.css';
+
+/* Компоненты */
+@import './components/header.css';
+@import './components/footer.css';
+@import './components/contact-promo.css';
+@import './components/buttons.css';
+@import './components/cards.css';
+@import './components/ItemPage.css';
+@import './components/forms.css';
+@import './components/support-modal.css';
+
+/* Страница продукта */
+@import './product/layout.css';
+@import './product/gallery.css';
+@import './product/hero.css';
+@import './product/features.css';
+@import './product/reviews.css';
+@import './product/purchase.css';
+@import './product/requirements.css';
+
+/* Страницы */
+@import './catalog.css';
+@import './pages/accounts.css';
+@import './pages/status.css';
+@import './pages/profile.css';
+
+/* Homepage styles */
+@import './homepage.css';
+@import './privacypage.css';
+
+/* Старые стили из jQuery проекта (для совместимости) */
+@import './main.css';
+@import './tags.css';
+
+/* Legacy стили из template */
+@import './legacy/main.css';
+@import './legacy/catalog.css';
+@import './legacy/game-page.css';
+@import './legacy/product-card.css';
+@import './legacy/product-details.css';
+@import './legacy/add.css';
+@import './responsive.css';

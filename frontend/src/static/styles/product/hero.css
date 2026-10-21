@@ -1,0 +1,57 @@
+/* frontend/src/styles/product/hero.css */
+
+.product-hero {
+  background: linear-gradient(
+    135deg,
+    rgba(10, 13, 11, 0.6) 0%,
+    rgba(6, 9, 8, 0.8) 100%
+  );
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow), 0 0 40px rgba(0, 255, 163, 0.02);
+  position: relative;
+  overflow: hidden;
+}
+
+.product-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at top right,
+    rgba(0, 255, 163, 0.02) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+.product-badge {
+  display: inline-block;
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+.product-title {
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.product-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .product-hero {
+    padding: 24px;
+  }
+  .product-title {
+    font-size: 32px;
+  }
+}

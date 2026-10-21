@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#060908" />
+    <title>Читы для игр и игровой софт — MILLEX</title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="canonical" href="https://millex.market/" />
+    <meta name="description" content="Каталог игрового софта MILLEX: читы и инструменты для популярных игр. Изучите описание, возможности и доступные предложения." />
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+    <meta property="og:site_name" content="MILLEX" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://millex.market/" />
+    <meta property="og:title" content="Читы для игр и игровой софт — MILLEX" />
+    <meta property="og:description" content="Каталог игрового софта MILLEX: читы и инструменты для популярных игр. Изучите описание, возможности и доступные предложения." />
+    <meta property="og:locale" content="ru_RU" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Читы для игр и игровой софт — MILLEX" />
+    <meta name="twitter:description" content="Каталог игрового софта MILLEX: читы и инструменты для популярных игр. Изучите описание, возможности и доступные предложения." />
+    <meta name="yandex-verification" content="efa269c543297d80" />
+    <script>
+      (function () {
+        var url = new URL(window.location.href);
+        if (url.pathname !== "/reset-password") return;
+        window.__millexPasswordResetRoute = true;
+        var token = url.searchParams.get("token");
+        if (!token) return;
+        window.__millexPasswordResetToken = token;
+        try {
+          window.sessionStorage.setItem("millex_password_reset_token", token);
+        } catch (error) {
+          // Keep the token in memory when session storage is unavailable.
+        }
+        url.searchParams.delete("token");
+        window.history.replaceState(
+          window.history.state,
+          "",
+          url.pathname + url.search + url.hash
+        );
+      })();
+    </script>
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+      if (!window.__millexPasswordResetRoute) {
+        (function (m, e, t, r, i, k, a) {
+          m[i] = m[i] || function () {
+            (m[i].a = m[i].a || []).push(arguments);
+          };
+          m[i].l = 1 * new Date();
+          for (var j = 0; j < document.scripts.length; j++) {
+            if (document.scripts[j].src === r) return;
+          }
+          k = e.createElement(t);
+          a = e.getElementsByTagName(t)[0];
+          k.async = 1;
+          k.src = r;
+          a.parentNode.insertBefore(k, a);
+        })(window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id=113660734", "ym");
+
+        window.dataLayer = window.dataLayer || [];
+        ym(113660734, "init", {
+          ssr: true,
+          webvisor: true,
+          clickmap: true,
+          ecommerce: "dataLayer",
+          referrer: document.referrer,
+          url: location.href,
+          accurateTrackBounce: true,
+          trackLinks: true
+        });
+      }
+    </script>
+    <!-- /Yandex.Metrika counter -->
+  </head>
+  <body>
+    <noscript>
+      <div>
+        <img
+          src="https://mc.yandex.ru/watch/113660734"
+          style="position:absolute; left:-9999px;"
+          alt=""
+        />
+      </div>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

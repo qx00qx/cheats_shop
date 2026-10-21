@@ -1,0 +1,63 @@
+
+
+.btn-ghost,
+.btn-primary {
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-primary);
+  transition: all var(--t-fast);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-on-main {
+ width: 500px;
+ margin: 50px auto;
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+}
+
+.btn-primary {
+  background: var(--accent-green);
+  color: var(--bg-primary);
+  border-color: var(--accent-green);
+  font-weight: 700;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 163, 0.4);
+}
+
+.btn-primary:disabled,
+.btn-ghost:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* iPhone SE и маленькие телефоны */
+@media (max-width: 480px) {
+  .btn-ghost,
+  .btn-primary {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 374px) {
+  .btn-ghost,
+  .btn-primary {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+}

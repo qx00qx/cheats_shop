@@ -1,0 +1,135 @@
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100vh;
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+body {
+  font-family: "Neometric Regular", sans-serif;
+  background: #060807;
+  color: var(--text-primary);
+  line-height: 1.6;
+  position: relative;
+}
+
+/* Apply system font to all small text (non-headings) */
+p, span, li, a, label, input, textarea, select, button {
+  font-family: "Neometric Regular", sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app > main {
+  flex: 1;
+}
+
+.green_link {
+  color: var(--accent-green);
+}
+
+/* Заголовки страниц */
+.page-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.accent {
+  color: var(--accent-green);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 16px;
+  }
+}
+
+/* iPhone SE и маленькие телефоны (375px - 479px) */
+@media (max-width: 480px) {
+  .container {
+    padding: 16px 12px;
+  }
+
+  .page-title {
+    font-size: 22px;
+  }
+}
+
+/* Очень маленькие экраны (< 375px) */
+@media (max-width: 374px) {
+  .container {
+    padding: 12px 8px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+}
+
+/* Статусы заказов */
+.order-status {
+  display: inline-block;
+}
+
+.order-status.status-pending {
+  background: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.order-status.status-paid {
+  background: rgba(0, 255, 148, 0.15);
+  color: #00ff94;
+  border: 1px solid rgba(0, 255, 148, 0.3);
+}
+
+.order-status.status-cancelled {
+  background: rgba(255, 92, 92, 0.15);
+  color: #ff5c5c;
+  border: 1px solid rgba(255, 92, 92, 0.3);
+}
+
+.order-status.status-failed {
+  background: rgba(255, 92, 92, 0.15);
+  color: #ff5c5c;
+  border: 1px solid rgba(255, 92, 92, 0.3);
+}

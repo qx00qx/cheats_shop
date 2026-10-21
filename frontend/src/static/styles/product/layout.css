@@ -1,0 +1,35 @@
+
+
+.product-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  padding-top: 24px;
+}
+
+.product-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.product-sidebar {
+  position: relative;
+}
+
+.sticky-sidebar {
+  position: sticky;
+  top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 1200px) {
+  .product-layout {
+    grid-template-columns: 1fr;
+  }
+  .sticky-sidebar {
+    position: static;
+  }
+}

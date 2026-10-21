@@ -1,0 +1,292 @@
+/* Локальные шрифты из старого проекта */
+
+/* DrukCyr */
+@font-face {
+  font-family: 'DrukCyr';
+  font-style: normal;
+  font-weight: 700;
+  src: url('../fonts/DrukCyr-Bold.eot');
+  src: url('../fonts/DrukCyr-Bold.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/DrukCyr-Bold.woff2') format('woff2'),
+       url('../fonts/DrukCyr-Bold.woff') format('woff'),
+       url('../fonts/DrukCyr-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'DrukCyr';
+  font-style: italic;
+  font-weight: 700;
+  src: url('../fonts/DrukCyr-BoldItalic.eot');
+  src: url('../fonts/DrukCyr-BoldItalic.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/DrukCyr-BoldItalic.woff2') format('woff2'),
+       url('../fonts/DrukCyr-BoldItalic.woff') format('woff'),
+       url('../fonts/DrukCyr-BoldItalic.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'DrukCyr';
+  font-style: normal;
+  font-weight: 900;
+  src: url('../fonts/DrukCyr-Heavy.eot');
+  src: url('../fonts/DrukCyr-Heavy.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/DrukCyr-Heavy.woff2') format('woff2'),
+       url('../fonts/DrukCyr-Heavy.woff') format('woff'),
+       url('../fonts/DrukCyr-Heavy.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'DrukCyr';
+  font-style: italic;
+  font-weight: 900;
+  src: url('../fonts/DrukCyr-HeavyItalic.eot');
+  src: url('../fonts/DrukCyr-HeavyItalic.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/DrukCyr-HeavyItalic.woff2') format('woff2'),
+       url('../fonts/DrukCyr-HeavyItalic.woff') format('woff'),
+       url('../fonts/DrukCyr-HeavyItalic.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'DrukCyr';
+  font-style: normal;
+  font-weight: 500;
+  src: url('../fonts/DrukCyr-Medium.eot');
+  src: url('../fonts/DrukCyr-Medium.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/DrukCyr-Medium.woff2') format('woff2'),
+       url('../fonts/DrukCyr-Medium.woff') format('woff'),
+       url('../fonts/DrukCyr-Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'DrukCyr';
+  font-style: italic;
+  font-weight: 500;
+  src: url('../fonts/DrukCyr-MediumItalic.eot');
+  src: url('../fonts/DrukCyr-MediumItalic.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/DrukCyr-MediumItalic.woff2') format('woff2'),
+       url('../fonts/DrukCyr-MediumItalic.woff') format('woff'),
+       url('../fonts/DrukCyr-MediumItalic.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'DrukCyr';
+  font-style: normal;
+  font-weight: 800;
+  src: url('../fonts/DrukCyr-Super.eot');
+  src: url('../fonts/DrukCyr-Super.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/DrukCyr-Super.woff2') format('woff2'),
+       url('../fonts/DrukCyr-Super.woff') format('woff'),
+       url('../fonts/DrukCyr-Super.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'DrukCyr';
+  font-style: italic;
+  font-weight: 800;
+  src: url('../fonts/DrukCyr-SuperItalic.eot');
+  src: url('../fonts/DrukCyr-SuperItalic.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/DrukCyr-SuperItalic.woff2') format('woff2'),
+       url('../fonts/DrukCyr-SuperItalic.woff') format('woff'),
+       url('../fonts/DrukCyr-SuperItalic.ttf') format('truetype');
+}
+
+/* Benzin */
+@font-face {
+  font-family: 'Benzin';
+  font-style: normal;
+  font-weight: 700;
+  src: url('../fonts/benzin-bold.eot');
+  src: url('../fonts/benzin-bold.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/benzin-bold.woff2') format('woff2'),
+       url('../fonts/benzin-bold.woff') format('woff'),
+       url('../fonts/benzin-bold.ttf') format('truetype'),
+       url('../fonts/benzin-bold.svg#benzin-bold') format('svg');
+}
+
+@font-face {
+  font-family: 'Benzin';
+  font-style: normal;
+  font-weight: 500;
+  src: url('../fonts/benzin-medium.eot');
+  src: url('../fonts/benzin-medium.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/benzin-medium.woff2') format('woff2'),
+       url('../fonts/benzin-medium.woff') format('woff'),
+       url('../fonts/benzin-medium.ttf') format('truetype'),
+       url('../fonts/benzin-medium.svg#benzin-medium') format('svg');
+}
+
+/* Neometric */
+@font-face {
+  font-family: 'Neometric';
+  font-style: normal;
+  font-weight: 300;
+  src: url('../fonts/Neometric Hairline (Regular).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: italic;
+  font-weight: 300;
+  src: url('../fonts/Neometric Hairline Italic (Italic).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/Neometric-Regular.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: italic;
+  font-weight: 400;
+  src: url('../fonts/Neometric Italic (Italic).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: normal;
+  font-weight: 500;
+  src: url('../fonts/Neometric Medium (Regular).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: italic;
+  font-weight: 500;
+  src: url('../fonts/Neometric Medium Italic (Italic).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: normal;
+  font-weight: 600;
+  src: url('../fonts/Neometric Light (Regular).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: italic;
+  font-weight: 600;
+  src: url('../fonts/Neometric Light Italic (Italic).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: normal;
+  font-weight: 700;
+  src: url('../fonts/Neometric Bold (Regular).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: italic;
+  font-weight: 700;
+  src: url('../fonts/Neometric Bold Italic (Bold Italic).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: normal;
+  font-weight: 800;
+  src: url('../fonts/Neometric Extra Bold (Bold).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: italic;
+  font-weight: 800;
+  src: url('../fonts/Neometric Extra Bold Italic (Bold Italic).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: normal;
+  font-weight: 900;
+  src: url('../fonts/Neometric Black (Regular).woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Neometric';
+  font-style: italic;
+  font-weight: 900;
+  src: url('../fonts/Neometric Black Italic (Bold Italic).woff') format('woff');
+}
+
+/* HalvarBreit - основные веса */
+@font-face {
+  font-family: 'HalvarBreit';
+  font-style: normal;
+  font-weight: 100;
+  src: url('../fonts/HalvarBreit-Th.eot');
+  src: url('../fonts/HalvarBreit-Th.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/HalvarBreit-Th.woff2') format('woff2'),
+       url('../fonts/HalvarBreit-Th.woff') format('woff'),
+       url('../fonts/HalvarBreit-Th.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'HalvarBreit';
+  font-style: normal;
+  font-weight: 300;
+  src: url('../fonts/HalvarBreit-Lt.eot');
+  src: url('../fonts/HalvarBreit-Lt.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/HalvarBreit-Lt.woff2') format('woff2'),
+       url('../fonts/HalvarBreit-Lt.woff') format('woff'),
+       url('../fonts/HalvarBreit-Lt.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'HalvarBreit';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/HalvarBreit-Rg.eot');
+  src: url('../fonts/HalvarBreit-Rg.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/HalvarBreit-Rg.woff2') format('woff2'),
+       url('../fonts/HalvarBreit-Rg.woff') format('woff'),
+       url('../fonts/HalvarBreit-Rg.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'HalvarBreit';
+  font-style: normal;
+  font-weight: 500;
+  src: url('../fonts/HalvarBreit-Md.eot');
+  src: url('../fonts/HalvarBreit-Md.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/HalvarBreit-Md.woff2') format('woff2'),
+       url('../fonts/HalvarBreit-Md.woff') format('woff'),
+       url('../fonts/HalvarBreit-Md.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'HalvarBreit';
+  font-style: normal;
+  font-weight: 700;
+  src: url('../fonts/HalvarBreit-Bd.eot');
+  src: url('../fonts/HalvarBreit-Bd.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/HalvarBreit-Bd.woff2') format('woff2'),
+       url('../fonts/HalvarBreit-Bd.woff') format('woff'),
+       url('../fonts/HalvarBreit-Bd.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'HalvarBreit';
+  font-style: normal;
+  font-weight: 800;
+  src: url('../fonts/HalvarBreit-Hl.eot');
+  src: url('../fonts/HalvarBreit-Hl.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/HalvarBreit-Hl.woff2') format('woff2'),
+       url('../fonts/HalvarBreit-Hl.woff') format('woff'),
+       url('../fonts/HalvarBreit-Hl.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'HalvarBreit';
+  font-style: normal;
+  font-weight: 900;
+  src: url('../fonts/HalvarBreit-Blk.eot');
+  src: url('../fonts/HalvarBreit-Blk.eot?#iefix') format('embedded-opentype'),
+       url('../fonts/HalvarBreit-Blk.woff2') format('woff2'),
+       url('../fonts/HalvarBreit-Blk.woff') format('woff'),
+       url('../fonts/HalvarBreit-Blk.ttf') format('truetype');
+}

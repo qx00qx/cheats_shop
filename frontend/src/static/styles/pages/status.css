@@ -1,0 +1,160 @@
+/* Status Page Styles */
+
+.st-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  box-sizing: border-box;
+}
+
+/* Шапка */
+.st-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.st-head-left {}
+.st-title {
+  font-size: 22px; font-weight: 800; color: #fff;
+  letter-spacing: -0.02em; margin: 0 0 4px; line-height: 1.2;
+}
+.st-sub {
+  font-size: 12px; color: rgba(255,255,255,0.3); margin: 0;
+}
+
+/* Легенда + фильтр */
+.st-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.st-filter-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px; font-weight: 700;
+  cursor: pointer; border: 1px solid transparent;
+  transition: all 0.15s;
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.st-filter-btn:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.8); }
+.st-filter-btn.active-all   { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.15); color: #fff; }
+.st-filter-btn.active-1 { background: rgba(0,255,148,0.08); border-color: rgba(0,255,148,0.2); color: #00FF94; }
+.st-filter-btn.active-2 { background: rgba(12,109,163,0.12); border-color: rgba(12,109,163,0.3); color: #4db8e8; }
+.st-filter-btn.active-3 { background: rgba(255,155,65,0.08); border-color: rgba(255,155,65,0.22); color: #ff9b41; }
+.st-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.st-dot-1 { background: #00FF94; box-shadow: 0 0 5px rgba(0,255,148,0.7); }
+.st-dot-2 { background: #4db8e8; box-shadow: 0 0 5px rgba(77,184,232,0.6); }
+.st-dot-3 { background: #ff9b41; box-shadow: 0 0 5px rgba(255,155,65,0.65); }
+
+/* Поиск */
+.st-search-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+.st-search {
+  width: 100%; box-sizing: border-box;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 40px 10px 14px;
+  font-size: 13px; color: #fff;
+  outline: none;
+  transition: border-color 0.18s;
+  font-family: inherit;
+}
+.st-search:focus { border-color: rgba(0,255,148,0.25); }
+.st-search::placeholder { color: rgba(255,255,255,0.2); }
+.st-search-icon {
+  position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+  color: rgba(255,255,255,0.25); pointer-events: none;
+}
+
+/* Секция игры */
+.st-section {
+  margin-bottom: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.st-section-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.st-section-header:hover { background: rgba(255,255,255,0.03); }
+.st-section-img-placeholder {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(255,255,255,0.06); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.st-section-name {
+  font-size: 14px; font-weight: 700; color: #fff; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.st-section-count {
+  font-size: 11px; color: rgba(255,255,255,0.25);
+  white-space: nowrap; flex-shrink: 0;
+}
+.st-section-chevron {
+  color: rgba(255,255,255,0.2); flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.st-section.open .st-section-chevron { transform: rotate(180deg); }
+
+/* Статус-бейджи внутри заголовка */
+.st-section-badges { display: flex; gap: 4px; flex-shrink: 0; }
+.st-mini-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 5px; letter-spacing: 0.04em;
+}
+.st-mini-badge-1 { background: rgba(0,255,148,0.1); color: #00FF94; }
+.st-mini-badge-2 { background: rgba(77,184,232,0.1); color: #4db8e8; }
+.st-mini-badge-3 { background: rgba(255,155,65,0.1); color: #ffb36e; }
+
+/* Список читов */
+.st-cheats { display: none; border-top: 1px solid rgba(255,255,255,0.05); }
+.st-section.open .st-cheats { display: block; }
+.st-cheat-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.st-cheat-row:last-child { border-bottom: none; }
+.st-cheat-row:hover { background: rgba(255,255,255,0.03); }
+.st-cheat-name {
+  flex: 1; font-size: 13px; color: rgba(255,255,255,0.65);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: color 0.15s;
+}
+.st-cheat-row:hover .st-cheat-name { color: #fff; }
+.st-badge {
+  font-size: 10px; font-weight: 700;
+  padding: 3px 9px; border-radius: 6px;
+  white-space: nowrap; flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+.st-badge-1 { background: rgba(0,255,148,0.1); border: 1px solid rgba(0,255,148,0.2); color: #00FF94; }
+.st-badge-2 { background: rgba(77,184,232,0.12); border: 1px solid rgba(77,184,232,0.25); color: #4db8e8; }
+.st-badge-3 { background: rgba(255,155,65,0.1); border: 1px solid rgba(255,155,65,0.22); color: #ffb36e; }
+
+.st-empty {
+  text-align: center; padding: 60px 20px;
+  color: rgba(255,255,255,0.2); font-size: 14px;
+}
+.st-empty svg { opacity: 0.15; display: block; margin: 0 auto 12px; }

@@ -1,0 +1,33 @@
+.admin-product-flags {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.admin-product-flags__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.admin-product-flags__option {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 8px;
+  color: #f4f4f4;
+  cursor: pointer;
+  line-height: 1.35;
+}
+
+.admin-product-flags__option input {
+  flex: 0 0 auto;
+  margin: 3px 0 0;
+  accent-color: #00ff8c;
+}
+
+@media (max-width: 640px) {
+  .admin-product-flags__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

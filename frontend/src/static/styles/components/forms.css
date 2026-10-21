@@ -1,0 +1,66 @@
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.forgot-password-form {
+  gap: 10px;
+}
+
+.input,
+.promo-input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  transition: all var(--t-fast);
+}
+
+.input:focus,
+.promo-input:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px var(--accent-green-glow);
+}
+
+.input::placeholder,
+.promo-input::placeholder {
+  color: var(--text-muted);
+}
+
+.error {
+  color: #ff5c5c;
+  font-size: 13px;
+}
+
+/* iPhone SE и маленькие телефоны */
+@media (max-width: 480px) {
+  .input,
+  .promo-input {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .error {
+    font-size: 12px;
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 374px) {
+  .input,
+  .promo-input {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .error {
+    font-size: 11px;
+  }
+}

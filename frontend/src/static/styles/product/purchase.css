@@ -1,0 +1,334 @@
+
+.purchase-block {
+  background: linear-gradient(
+    135deg,
+    rgba(10, 13, 11, 0.7) 0%,
+    rgba(6, 9, 8, 0.85) 100%
+  );
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow), 0 0 40px rgba(0, 255, 163, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.purchase-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(
+    circle,
+    rgba(0, 255, 163, 0.04) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.purchase-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.purchase-subtitle {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+
+/* Тарифы */
+.pricing-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.pricing-option {
+  position: relative;
+  cursor: pointer;
+}
+
+.pricing-option input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+}
+
+.option-content {
+  background: linear-gradient(
+    135deg,
+    rgba(14, 18, 16, 0.3) 0%,
+    rgba(10, 13, 11, 0.5) 100%
+  );
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all var(--t-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.option-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 255, 163, 0.03) 0%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+
+.pricing-option:hover .option-content {
+  border-color: var(--accent-green);
+}
+
+.pricing-option:hover .option-content::before {
+  opacity: 1;
+}
+
+.pricing-option.active .option-content,
+.pricing-option input[type='radio']:checked + .option-content {
+  border-color: var(--accent-green);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 255, 163, 0.08) 0%,
+    rgba(0, 255, 163, 0.04) 100%
+  );
+  box-shadow:
+    0 0 20px rgba(0, 255, 163, 0.1),
+    inset 0 0 20px rgba(0, 255, 163, 0.03);
+}
+
+.option-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.option-price {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.price-old {
+  color: var(--text-muted);
+  text-decoration: line-through;
+  font-size: 12px;
+}
+
+.price-current {
+  color: var(--accent-green);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.price-badge {
+  background: var(--accent-green);
+  color: var(--bg-primary);
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Форма покупки */
+.purchase-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Способы оплаты */
+.payment-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.payment-methods {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.payment-method {
+  position: relative;
+  cursor: pointer;
+}
+
+.payment-method input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+}
+
+.payment-method > div {
+  background: linear-gradient(
+    135deg,
+    rgba(14, 18, 16, 0.3) 0%,
+    rgba(10, 13, 11, 0.5) 100%
+  );
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--t-fast);
+  height: 100%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.payment-method > div::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 255, 163, 0.04) 0%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+
+.payment-method:hover > div {
+  border-color: var(--accent-green);
+}
+
+.payment-method:hover > div::before {
+  opacity: 1;
+}
+
+.payment-method.active > div,
+.payment-method input[type='radio']:checked + div {
+  border-color: var(--accent-green);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 255, 163, 0.08) 0%,
+    rgba(0, 255, 163, 0.04) 100%
+  );
+  box-shadow: 0 0 15px rgba(0, 255, 163, 0.12);
+}
+
+.method-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-green);
+  font-size: 20px;
+}
+
+.method-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.method-info {
+  text-align: center;
+}
+
+.method-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.method-desc {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+/* Кнопка Купить */
+.purchase-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(
+    135deg,
+    var(--accent-green) 0%,
+    #00d98a 50%,
+    var(--accent-green-dark) 100%
+  );
+  color: var(--bg-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--t-mid);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow:
+    0 4px 20px rgba(0, 255, 163, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.purchase-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.purchase-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 30px rgba(0, 255, 163, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.purchase-btn:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.purchase-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.purchase-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .payment-methods {
+    grid-template-columns: 1fr;
+  }
+}

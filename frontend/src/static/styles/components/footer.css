@@ -1,0 +1,147 @@
+
+.footer {
+  background: #060807;
+  position: relative;
+  z-index: 1;
+  padding-top: 60px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.footer .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.footer__global {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  margin-bottom: 30px;
+}
+
+.footer__brand {
+  flex: 1;
+  min-width: 200px;
+}
+
+.footer__logo {
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.footer__logo span {
+  color: #00FF94;
+}
+
+.footer__brand p {
+  margin-top: 30px;
+  color: #fff;
+  font-size: 13px;
+  display: block;
+  line-height: 130%;
+  margin-bottom: 30px;
+}
+
+.footer__links {
+  flex: 1;
+  min-width: 150px;
+}
+
+.footer__links h3 {
+  font-family: "Neometric Regular", sans-serif;
+  font-size: 14px;
+  margin-bottom: 10px;
+  list-style: none;
+  color: #666977;
+  padding: 0;
+}
+
+.footer__links ul {
+  padding: 0;
+  margin: 0;
+}
+
+.footer__links li {
+  font-family: "Neometric Regular", sans-serif;
+  font-size: 14px;
+  margin-bottom: 20px;
+  list-style: none;
+  color: #666977;
+}
+
+.footer__links a {
+  font-size: 13px;
+  color: #666977;
+  transition-duration: 200ms;
+  font-family: "Neometric Regular", sans-serif;
+  text-decoration: none;
+}
+
+.footer__links a:hover {
+  color: #fff;
+}
+
+.footer hr {
+  border-color: #131315;
+  border: unset;
+  border-bottom: 1px solid #131315;
+  margin: 30px 0;
+}
+
+.footer__copy {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.footer__copy span {
+  color: #666977;
+  font-size: 14px;
+}
+
+.footer__copy ul {
+  margin: 0;
+  padding: 0;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.footer__copy ul li {
+  list-style: none;
+  margin-left: 30px;
+}
+
+.footer__copy ul li:first-child {
+  margin-left: 0;
+}
+
+.footer__copy ul a {
+  color: #fff;
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .footer__global {
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .footer__copy {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer__global ul li:last-child {
+    margin-bottom: 0;
+  }
+}
