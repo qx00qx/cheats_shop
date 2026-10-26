@@ -786,7 +786,7 @@ body::after {
 }
 
 .game-page .games-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 0;
 }
@@ -811,7 +811,9 @@ body::after {
 
 .game-page__product-image {
   position: relative;
-  height: 136px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
   flex: 0 0 auto;
   overflow: hidden;
   background: linear-gradient(135deg, #1b2420, #111);
@@ -967,7 +969,7 @@ body::after {
 .game-page .game-card-title {
   overflow: hidden;
   margin: 0;
-  font-size: 16px;
+  font-size: 20px;
   font-style: normal;
   font-weight: 800;
   letter-spacing: 0;
@@ -1081,6 +1083,20 @@ body::after {
   font-weight: 850;
 }
 
+.game-page__product-price .game-page__product-discount {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 5px;
+  border: 1px solid rgba(0, 255, 148, 0.42);
+  border-radius: 5px;
+  background: rgba(0, 255, 148, 0.12);
+  color: #62ffb6;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .game-page__product-price del {
   color: rgba(255, 255, 255, 0.45);
   font-size: 10px;
@@ -1172,11 +1188,11 @@ body::after {
   }
 
   .game-page__product-image {
-    height: 126px;
+    height: auto;
   }
 
   .game-page .game-card-title {
-    font-size: 14px;
+    font-size: 16px;
   }
 }
 

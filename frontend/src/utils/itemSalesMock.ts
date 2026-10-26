@@ -8,7 +8,11 @@ export type MockItemSales = {
   sales: MockItemSale[];
 };
 
-const salesByAlias = new Map<string, MockItemSales>();
+type CachedMockItemSales = MockItemSales & {
+  defaultSalesCount: number;
+};
+
+const salesByAlias = new Map<string, CachedMockItemSales>();
 
 function createRandom(seed: number): () => number {
   let state = seed || 1;
@@ -27,12 +31,18 @@ function hashAlias(alias: string): number {
   return hash >>> 0;
 }
 
-export function getMockItemSales(alias: string): MockItemSales {
+export function getMockItemSales(alias: string, salesLimit?: number): MockItemSales {
   const cached = salesByAlias.get(alias);
-  if (cached) return cached;
+  if (cached) {
+    return {
+      purchase_count: cached.purchase_count,
+      sales: cached.sales.slice(0, salesLimit ?? cached.defaultSalesCount),
+    };
+  }
 
   const random = createRandom(hashAlias(alias));
-  const saleCount = 5 + Math.floor(random() * 6);
+  const defaultSalesCount = 5 + Math.floor(random() * 6);
+  const saleCount = Math.max(defaultSalesCount, 16);
   const sales = Array.from({ length: saleCount }, () => {
     const local = Array.from({ length: 8 }, () =>
       String.fromCharCode(97 + Math.floor(random() * 26)),
@@ -47,10 +57,14 @@ export function getMockItemSales(alias: string): MockItemSales {
     new Date(second.created_at).getTime() - new Date(first.created_at).getTime(),
   );
 
-  const mockSales = {
+  const mockSales: CachedMockItemSales = {
     purchase_count: 50 + Math.floor(random() * 451),
     sales,
+    defaultSalesCount,
   };
   salesByAlias.set(alias, mockSales);
-  return mockSales;
+  return {
+    purchase_count: mockSales.purchase_count,
+    sales: mockSales.sales.slice(0, salesLimit ?? defaultSalesCount),
+  };
 }

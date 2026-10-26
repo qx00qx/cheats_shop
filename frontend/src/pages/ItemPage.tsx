@@ -650,7 +650,10 @@ export default function ItemPage() {
                 {item.feature_categories.map((category) => {
                   const expanded = expandedFeatureCategoryId === category.category_id;
                   return (
-                    <div className="item-feature-category" key={category.category_id}>
+                    <div
+                      className={`item-feature-category${expanded ? " is-expanded" : ""}`}
+                      key={category.category_id}
+                    >
                       <button
                         className="item-feature-category__header"
                         type="button"

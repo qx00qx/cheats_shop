@@ -4,6 +4,7 @@ import heroImg from "../static/img/hero.png";
 import FaqSection from "../components/faqsection/FaqSection";
 import Seo from "../components/Seo";
 import { applyDiscount, getCheatDiscountPercent, type CheatPromotion } from "../utils/cheatPromotion";
+import { getMockItemSales } from "../utils/itemSalesMock";
 
 interface GameCard {
   href: string;
@@ -36,34 +37,44 @@ interface RecentPurchase {
   created_at: string;
 }
 
-function shufflePurchases(purchases: RecentPurchase[]): RecentPurchase[] {
-  const shuffled = [...purchases];
-  for (let index = shuffled.length - 1; index > 0; index--) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
-  }
-  return shuffled;
-}
-
-function createTestPurchases(cheats: FeaturedCheat[]): RecentPurchase[] {
+function createMockRecentPurchases(cheats: FeaturedCheat[]): RecentPurchase[] {
   if (cheats.length === 0) return [];
 
-  const randomLetters = () =>
-    Array.from({ length: 8 }, () => String.fromCharCode(97 + Math.floor(Math.random() * 26))).join("");
+  const purchasesByCheat = cheats.map((cheat) => ({
+    cheat,
+    purchases: getMockItemSales(cheat.alias, 16).sales,
+    nextPurchaseIndex: 0,
+  }));
+  const purchases: RecentPurchase[] = [];
+  let cheatIndex = 0;
 
-  return Array.from({ length: 24 }, () => {
-    const cheat = cheats[Math.floor(Math.random() * cheats.length)];
-    const testEmail = `${randomLetters()}@example.test`;
-    const emailLocalPart = testEmail.split("@")[0];
-    const ageInMinutes = Math.floor(Math.random() * 10 * 24 * 60);
+  while (purchases.length < 16) {
+    const source = purchasesByCheat[cheatIndex % purchasesByCheat.length];
+    const remaining = 16 - purchases.length;
+    const groupSize = remaining === 4
+      ? 2
+      : Math.min(2 + (cheatIndex % 2), remaining);
 
-    return {
-      alias: cheat.alias,
-      product: cheat.name,
-      email: `${emailLocalPart.slice(0, 2)}****@.test`,
-      created_at: new Date(Date.now() - ageInMinutes * 60 * 1000).toISOString(),
-    };
-  });
+    for (let index = 0; index < groupSize; index += 1) {
+      const purchase = source.purchases[source.nextPurchaseIndex];
+      if (!purchase) break;
+
+      purchases.push({
+        alias: source.cheat.alias,
+        product: source.cheat.name,
+        email: purchase.email,
+        created_at: purchase.created_at,
+      });
+      source.nextPurchaseIndex += 1;
+    }
+
+    cheatIndex += 1;
+  }
+
+  return purchases.sort(
+    (first, second) =>
+      new Date(second.created_at).getTime() - new Date(first.created_at).getTime(),
+  );
 }
 
 function getCheatStatus(cheat: FeaturedCheat): 1 | 2 | 3 {
@@ -110,7 +121,6 @@ export default function HomePage() {
   const [promotion, setPromotion] = useState<CheatPromotion | null>(null);
   const [recentPurchases, setRecentPurchases] = useState<RecentPurchase[]>([]);
   const [recentPurchasesPage, setRecentPurchasesPage] = useState(0);
-  const [recentPurchaseIndex, setRecentPurchaseIndex] = useState(0);
   const recentPurchasesPerPage = 4;
   const recentPurchasesPageCount = Math.ceil(recentPurchases.length / recentPurchasesPerPage);
 
@@ -143,35 +153,12 @@ export default function HomePage() {
         console.error("Failed to load homepage promotion:", error);
       });
 
-    if (!import.meta.env.DEV) {
-      fetch("/api/catalog/recent-purchases")
-        .then((response) => {
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return response.json() as Promise<RecentPurchase[]>;
-        })
-        .then((purchases) => setRecentPurchases(shufflePurchases(purchases)))
-        .catch((error) => {
-          console.error("Failed to load homepage recent purchases:", error);
-        });
-    }
   }, []);
 
   useEffect(() => {
-    if (import.meta.env.DEV && featuredCheats.length > 0) {
-      setRecentPurchases(shufflePurchases(createTestPurchases(featuredCheats)));
-    }
+    setRecentPurchases(createMockRecentPurchases(featuredCheats));
+    setRecentPurchasesPage(0);
   }, [featuredCheats]);
-
-  useEffect(() => {
-    if (recentPurchases.length < 2) return;
-    const intervalId = window.setInterval(() => {
-      setRecentPurchaseIndex((current) => {
-        const nextIndex = Math.floor(Math.random() * (recentPurchases.length - 1));
-        return nextIndex >= current ? nextIndex + 1 : nextIndex;
-      });
-    }, 6500 + Math.random() * 3500);
-    return () => window.clearInterval(intervalId);
-  }, [recentPurchases.length]);
 
   const promotionDiscountPercent = promotion?.active &&
     Date.now() < new Date(promotion.ends_at).getTime()
@@ -546,8 +533,8 @@ export default function HomePage() {
                   className="recent-purchase-card"
                   to={`/item/${encodeURIComponent(purchase.alias)}`}
                 >
-                  <span className="recent-purchase-card__email">{purchase.email}</span>
                   <strong className="recent-purchase-card__product">{purchase.product}</strong>
+                  <span className="recent-purchase-card__email">{purchase.email}</span>
                   <span className="recent-purchase-card__age">
                     {formatPurchaseAge(purchase.created_at)}
                   </span>
@@ -606,13 +593,18 @@ export default function HomePage() {
                         ? applyDiscount(cheat.price, discountPercent)
                         : cheat.price;
                       return (
-                        <span className="content__cheats-price">
+                        <div className="content__cheats-price">
                           <span className="content__cheats-price-label">От</span>
                           <strong>{formatPrice(currentPrice)} ₽</strong>
                           {discountPercent > 0 && (
-                            <del>{formatPrice(cheat.price)} ₽</del>
+                            <>
+                              <small className="content__cheats-price-discount">
+                                -{discountPercent}%
+                              </small>
+                              <del>{formatPrice(cheat.price)} ₽</del>
+                            </>
                           )}
-                        </span>
+                        </div>
                       );
                     })()}
                   </div>
@@ -636,33 +628,6 @@ export default function HomePage() {
 
         <FaqSection />
       </main>
-      {recentPurchases.length > 0 && (
-        <aside
-          key={`${recentPurchases[recentPurchaseIndex]?.created_at}-${recentPurchaseIndex}`}
-          className="recent-purchase-toast"
-          role="status"
-          aria-live="polite"
-        >
-          <div className="recent-purchase-toast__icon" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="m5 12 4 4L19 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <div className="recent-purchase-toast__content">
-            <span className="recent-purchase-toast__eyebrow">
-              {import.meta.env.DEV ? "Тестовое уведомление" : "Недавняя покупка"}
-            </span>
-            <strong className="recent-purchase-toast__product">
-              {recentPurchases[recentPurchaseIndex]?.product}
-            </strong>
-            <span className="recent-purchase-toast__details">
-              {recentPurchases[recentPurchaseIndex]?.email}
-              <span aria-hidden="true"> · </span>
-              {formatPurchaseAge(recentPurchases[recentPurchaseIndex]?.created_at)}
-            </span>
-          </div>
-        </aside>
-      )}
     </div>
   );
 }

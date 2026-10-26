@@ -769,6 +769,23 @@
   letter-spacing: 0;
 }
 
+.newhome-cheats .content__cheats-price .content__cheats-price-discount {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  flex: 0 0 auto;
+  padding: 4px 5px;
+  margin-top: 0;
+  border: 1px solid rgba(0, 255, 148, 0.35);
+  border-radius: 5px;
+  background: rgba(0, 255, 148, 0.12);
+  color: #7dffc2;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 0 8px rgba(0, 255, 148, 0.25);
+}
+
 .newhome-cheats .content__cheats-item > a::after {
   position: absolute;
   inset: 45% 0 0;
@@ -2088,8 +2105,8 @@
 }
 
 @keyframes recent-purchase-enter {
-  0% { opacity: 0; transform: translate(-24px, 34px) scale(0.72); }
-  58% { opacity: 1; transform: translate(0, -9px) scale(1.07); }
+  0% { opacity: 0; transform: translateY(42px) scale(0.82); }
+  58% { opacity: 1; transform: translateY(-9px) scale(1.07); }
   76% { transform: translateY(4px) scale(0.97); }
   90% { transform: translateY(-2px) scale(1.02); }
   100% { opacity: 1; transform: translateY(0) scale(1); }

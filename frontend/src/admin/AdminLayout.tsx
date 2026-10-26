@@ -8,6 +8,7 @@ import AdminPayouts from "./AdminPayouts";
 import AdminEmailer from "./AdminEmailer";
 import AdminHomepage from "./AdminHomepage";
 import AdminArticles from "./AdminArticles";
+import AdminAccounting from "./AdminAccounting";
 
 export default function AdminLayout() {
   const navigation = [
@@ -17,6 +18,7 @@ export default function AdminLayout() {
     { to: "/admin/orders", label: "Заказы" },
     { to: "/admin/users", label: "Пользователи" },
     { to: "/admin/payouts", label: "Выплаты" },
+    { to: "/admin/accounting", label: "Бухгалтерия" },
     { to: "/admin/emailer", label: "Рассылки" },
     { to: "/admin/homepage", label: "Настройка главной" },
     { to: "/admin/articles", label: "Статьи" },
@@ -53,6 +55,7 @@ export default function AdminLayout() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="payouts" element={<AdminPayouts />} />
+            <Route path="accounting" element={<AdminAccounting />} />
             <Route path="emailer" element={<AdminEmailer />} />
             <Route path="homepage" element={<AdminHomepage />} />
             <Route path="articles" element={<AdminArticles />} />

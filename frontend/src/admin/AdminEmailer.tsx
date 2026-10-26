@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { EmailerAPI, Emailer, EmailerCreate } from "../api/emailer";
+import { EmailerAPI, Emailer, EmailerCreate, EmailerServiceStatus } from "../api/emailer";
 import { createPortal } from "react-dom";
 
 export default function AdminEmailer() {
@@ -7,11 +7,14 @@ export default function AdminEmailer() {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [sendingId, setSendingId] = useState<number | null>(null);
+  const [serviceStatus, setServiceStatus] = useState<EmailerServiceStatus | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [formData, setFormData] = useState<EmailerCreate>({
     subject: "",
     from_email: "",
-    to_email: "",
+    to_email: null,
     cc_email: null,
     body: "",
   });
@@ -19,8 +22,15 @@ export default function AdminEmailer() {
   useEffect(() => {
     setMounted(true);
     loadEmailers();
+    loadServiceStatus();
     return () => setMounted(false);
   }, []);
+
+  useEffect(() => {
+    if (!emailers.some((emailer) => emailer.send_status === "sending")) return;
+    const intervalId = window.setInterval(loadEmailers, 2000);
+    return () => window.clearInterval(intervalId);
+  }, [emailers]);
 
   const loadEmailers = async () => {
     try {
@@ -28,6 +38,15 @@ export default function AdminEmailer() {
       setEmailers(data);
     } catch (err) {
       console.error("Failed to load emailers:", err);
+    }
+  };
+
+  const loadServiceStatus = async () => {
+    try {
+      setServiceStatus(await EmailerAPI.status());
+    } catch (err) {
+      console.error("Failed to load Amazon SES status:", err);
+      setErrorMessage("Не удалось загрузить состояние Amazon SES.");
     }
   };
 
@@ -40,7 +59,7 @@ export default function AdminEmailer() {
       setFormData({
         subject: "",
         from_email: "",
-        to_email: "",
+        to_email: null,
         cc_email: null,
         body: "",
       });
@@ -52,12 +71,28 @@ export default function AdminEmailer() {
     }
   };
 
-  const handleSend = async (id: number) => {
+  const handleSend = async (
+    id: number,
+    subject: string,
+    toEmail: string | null,
+  ) => {
+    const recipientCount = toEmail ? 1 : serviceStatus?.active_recipient_count ?? 0;
+    if (!window.confirm(
+      `Отправить «${subject}» на ${recipientCount} адресов активных пользователей?`,
+    )) {
+      return;
+    }
+
+    setSendingId(id);
     try {
       await EmailerAPI.send(id);
+      setErrorMessage("");
       loadEmailers();
     } catch (err) {
       console.error("Failed to send emailer:", err);
+      setErrorMessage(err instanceof Error ? err.message : "Не удалось запустить рассылку.");
+    } finally {
+      setSendingId(null);
     }
   };
 
@@ -93,6 +128,38 @@ export default function AdminEmailer() {
       </div>
 
       <div
+        role="status"
+        style={{
+          padding: "14px 16px",
+          marginBottom: 18,
+          border: `1px solid ${serviceStatus?.configured ? "rgba(0,255,148,0.24)" : "rgba(255,193,7,0.3)"}`,
+          borderRadius: 10,
+          background: serviceStatus?.configured ? "rgba(0,255,148,0.06)" : "rgba(255,193,7,0.06)",
+          color: "rgba(255,255,255,0.82)",
+          fontSize: 13,
+        }}
+      >
+        <strong>
+          Amazon SES: {serviceStatus?.configured ? "настроен" : "не настроен"}
+        </strong>
+        {serviceStatus?.region && <span> · Регион: {serviceStatus.region}</span>}
+        {serviceStatus?.configured && (
+          <span> · Активных получателей: {serviceStatus.active_recipient_count}</span>
+        )}
+        {!serviceStatus?.configured && (
+          <div style={{ marginTop: 5, color: "rgba(255,255,255,0.6)" }}>
+            Укажите регион и AWS credentials в окружении backend. Транзакционные письма продолжают отправляться через прежний сервис.
+          </div>
+        )}
+      </div>
+
+      {errorMessage && (
+        <p role="alert" style={{ marginBottom: 16, color: "#ff7777" }}>
+          {errorMessage}
+        </p>
+      )}
+
+      <div
         className="admin-emailer__table"
         style={{
           background: "rgba(255, 255, 255, 0.03)",
@@ -107,7 +174,7 @@ export default function AdminEmailer() {
               <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>ID</th>
               <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>Тема</th>
               <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>От</th>
-              <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>Кому</th>
+              <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>Аудитория</th>
               <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>Статус</th>
               <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>Дата отправки</th>
               <th style={{ padding: "12px 16px", textAlign: "left", fontSize: 13, color: "rgba(255,255,255,0.7)" }}>Действия</th>
@@ -116,7 +183,7 @@ export default function AdminEmailer() {
           <tbody>
             {emailers.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ padding: "24px", textAlign: "center", color: "rgba(255,255,255,0.5)" }}>
+                <td colSpan={7} style={{ padding: "24px", textAlign: "center", color: "rgba(255,255,255,0.5)" }}>
                   Нет рассылок
                 </td>
               </tr>
@@ -126,32 +193,66 @@ export default function AdminEmailer() {
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>{emailer.id}</td>
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>{emailer.subject}</td>
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>{emailer.from_email}</td>
-                  <td style={{ padding: "12px 16px", fontSize: 14 }}>{emailer.to_email}</td>
+                  <td style={{ padding: "12px 16px", fontSize: 14 }}>
+                    {emailer.to_email || "Все активные пользователи"}
+                    {emailer.recipient_count > 0 && (
+                      <small style={{ display: "block", marginTop: 4, color: "rgba(255,255,255,0.55)" }}>
+                        {emailer.sent_count} из {emailer.recipient_count}
+                        {emailer.failed_count > 0 && ` · ошибок: ${emailer.failed_count}`}
+                      </small>
+                    )}
+                  </td>
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>
                     <span
                       style={{
                         padding: "4px 8px",
                         borderRadius: "4px",
                         fontSize: 12,
-                        background: emailer.is_sent
+                        background: emailer.send_status === "sent"
                           ? "rgba(0, 255, 148, 0.15)"
-                          : "rgba(255, 193, 7, 0.15)",
-                        color: emailer.is_sent ? "#00ff94" : "#ffc107",
+                          : emailer.send_status === "failed" || emailer.send_status === "partial"
+                            ? "rgba(255, 92, 92, 0.15)"
+                            : emailer.send_status === "sending"
+                              ? "rgba(77, 179, 255, 0.15)"
+                              : "rgba(255, 193, 7, 0.15)",
+                        color: emailer.send_status === "sent"
+                          ? "#00ff94"
+                          : emailer.send_status === "failed" || emailer.send_status === "partial"
+                            ? "#ff7777"
+                            : emailer.send_status === "sending"
+                              ? "#70c5ff"
+                              : "#ffc107",
                       }}
                     >
-                      {emailer.is_sent ? "Отправлено" : "Не отправлено"}
+                      {{
+                        draft: "Черновик",
+                        sending: "Отправляется",
+                        sent: "Отправлено",
+                        partial: "Отправлено частично",
+                        failed: "Ошибка отправки",
+                      }[emailer.send_status] ?? "Неизвестный статус"}
                     </span>
+                    {emailer.last_error && (
+                      <small style={{ display: "block", marginTop: 5, color: "#ff7777" }}>
+                        {emailer.last_error}
+                      </small>
+                    )}
                   </td>
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>{formatDate(emailer.last_send)}</td>
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>
                     <div style={{ display: "flex", gap: 8 }}>
-                      {!emailer.is_sent && (
+                      {emailer.send_status === "draft" && (
                         <button
                           className="btn-ghost"
-                          onClick={() => handleSend(emailer.id)}
+                          disabled={!serviceStatus?.configured || sendingId !== null}
+                          onClick={() => handleSend(
+                            emailer.id,
+                            emailer.subject,
+                            emailer.to_email,
+                          )}
                           style={{ padding: "4px 8px", fontSize: 12 }}
                         >
-                          Отправить
+                          Отправить всем
                         </button>
                       )}
                       <button
@@ -232,16 +333,21 @@ export default function AdminEmailer() {
               </div>
 
               <div>
-                <label style={{ display: "block", marginBottom: 8, fontSize: 14, color: "rgba(255,255,255,0.7)" }}>
-                  Кому (email) *
-                </label>
-                <input
-                  className="input"
-                  type="email"
-                  value={formData.to_email}
-                  onChange={(e) => setFormData({ ...formData, to_email: e.target.value })}
-                  required
-                />
+                <div
+                  style={{
+                    padding: "12px 14px",
+                    border: "1px solid rgba(0,255,148,0.2)",
+                    borderRadius: 9,
+                    background: "rgba(0,255,148,0.05)",
+                    color: "rgba(255,255,255,0.8)",
+                    fontSize: 13,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Аудитория: все активные пользователи
+                  {serviceStatus && ` (${serviceStatus.active_recipient_count})`}
+                  . Каждому пользователю отправляется отдельное письмо, адреса получателей не раскрываются.
+                </div>
               </div>
 
               <div>

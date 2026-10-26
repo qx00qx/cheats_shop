@@ -32,7 +32,9 @@ import PurchaseDeliveryPage from "./pages/PurchaseDeliveryPage";
 import { Modal } from "./components";
 import YandexMetrikaTracker from "./components/YandexMetrikaTracker";
 import PromotionModal from "./components/PromotionModal";
+import DomainNoticeModal from "./components/DomainNoticeModal";
 import ScrollToTop from "./components/ScrollToTop";
+import RecentPurchaseToast from "./components/RecentPurchaseToast";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import UserAgreement from "./pages/UserAgreement";
@@ -54,6 +56,8 @@ export default function App() {
       <ScrollToTop />
       <Modal />
       <PromotionModal />
+      <DomainNoticeModal />
+      <RecentPurchaseToast />
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />

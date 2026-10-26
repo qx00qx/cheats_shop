@@ -38,17 +38,21 @@ type Item = {
   last_purchase_at?: string | null;
 };
 
-type ItemSort = "newest" | "hit" | "undetected" | "top";
+type ItemSort = "newest" | "hit" | "undetected" | "top" | "price-asc" | "price-desc";
 
 const itemSortOptions: { value: ItemSort; label: string }[] = [
   { value: "newest", label: "Сначала новые" },
   { value: "hit", label: "Хит продаж" },
   { value: "undetected", label: "Undetected" },
   { value: "top", label: "Популярные" },
+  { value: "price-asc", label: "Сначала дешевле" },
+  { value: "price-desc", label: "Сначала дороже" },
 ];
 
 function isEnabledFlag(value: number | string | boolean | null | undefined): boolean {
-  return value === true || value === 1 || value === "1";
+  if (value === true || value === 1) return true;
+  if (typeof value !== "string") return false;
+  return value.trim() === "1" || value.trim().toLowerCase() === "true";
 }
 
 function getSecurityStatus(item: Item): 1 | 2 | 3 | null {
@@ -170,22 +174,57 @@ export default function GamePage() {
     return searchableText.includes(normalizedSearch);
   });
   const sortedItems = itemSort === "newest"
-    ? filteredItems
+    ? [...filteredItems]
     : filteredItems
       .map((item, index) => ({ item, index }))
-      .sort((left, right) =>
-        Number(
-          itemSort === "undetected"
-            ? isUndetected(right.item)
-            : isEnabledFlag(right.item[itemSort]),
-        ) -
-          Number(
-            itemSort === "undetected"
-              ? isUndetected(left.item)
-              : isEnabledFlag(left.item[itemSort]),
-          ) ||
-        left.index - right.index,
-      )
+      .sort((left, right) => {
+        if (itemSort === "price-asc" || itemSort === "price-desc") {
+          const leftPrice = left.item.price == null
+            ? null
+            : applyDiscount(
+              left.item.price,
+              getCheatDiscountPercent(
+                0,
+                left.item.promo_discount_percent,
+                left.item.promo_expires_at,
+              ),
+            );
+          const rightPrice = right.item.price == null
+            ? null
+            : applyDiscount(
+              right.item.price,
+              getCheatDiscountPercent(
+                0,
+                right.item.promo_discount_percent,
+                right.item.promo_expires_at,
+              ),
+            );
+
+          if (leftPrice == null && rightPrice != null) return 1;
+          if (leftPrice != null && rightPrice == null) return -1;
+          if (leftPrice != null && rightPrice != null && leftPrice !== rightPrice) {
+            return itemSort === "price-asc"
+              ? leftPrice - rightPrice
+              : rightPrice - leftPrice;
+          }
+        } else {
+          const leftPriority = itemSort === "undetected"
+            ? Number(isUndetected(left.item))
+            : Number(isEnabledFlag(left.item[itemSort]));
+          const rightPriority = itemSort === "undetected"
+            ? Number(isUndetected(right.item))
+            : Number(isEnabledFlag(right.item[itemSort]));
+          if (leftPriority !== rightPriority) return rightPriority - leftPriority;
+
+          if (itemSort === "hit" || itemSort === "top") {
+            const salesDifference =
+              (right.item.purchase_count ?? 0) - (left.item.purchase_count ?? 0);
+            if (salesDifference !== 0) return salesDifference;
+          }
+        }
+
+        return left.index - right.index;
+      })
       .map(({ item }) => item);
 
   return (
@@ -584,6 +623,9 @@ export default function GamePage() {
                                     itemDiscountPercent,
                                   )).toLocaleString("ru-RU")}
                                 </strong>
+                                <small className="game-page__product-discount">
+                                  -{itemDiscountPercent}%
+                                </small>
                               </>
                             ) : (
                               <strong>₽{Math.round(item.price).toLocaleString("ru-RU")}</strong>

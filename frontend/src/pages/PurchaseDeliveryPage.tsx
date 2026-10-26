@@ -174,7 +174,7 @@ export default function PurchaseDeliveryPage() {
       return "В течение 5 минут вы автоматически получите ключ активации после подтверждения от платежной системы.";
     }
     if (order?.status === "new") {
-      return "Платёж подтверждён. Заказ передан администратору, ключ появится здесь сразу после выдачи.";
+      return "Платёж подтверждён. Ключ активации будет выдан автоматически в течение 5 минут после подтверждения платёжным агрегатором.";
     }
     if (order?.status === "completed" && order.key_value) {
       return "Ключ активации выдан. Скопируйте его и следуйте инструкции по установке.";
@@ -214,7 +214,6 @@ export default function PurchaseDeliveryPage() {
           {order?.product ? ` · ${order.product}` : ""}
         </div>
         <h1 id="delivery-title">{statusHeading}</h1>
-        <p className="purchase-delivery-lead">{statusMessage}</p>
 
         {order && (
           <div className="purchase-delivery-order">
