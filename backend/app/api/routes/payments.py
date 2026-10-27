@@ -23,6 +23,13 @@ from app.services.order_delivery import (
     fulfill_bot_order,
     fulfill_store_order,
 )
+from app.services.accounting import (
+    record_bot_order_chargeback,
+    record_bot_order_sale,
+    record_topup_chargeback,
+    record_topup_credit,
+    snapshot_order_accounting,
+)
 from app.services.cheat_promotion import (
     discounted_cheat_price,
     effective_cheat_discount_percent,
@@ -337,6 +344,12 @@ def _apply_balance_topup(
             ))
         if topup and topup.status != "chargebacked":
             topup.status = "confirmed"
+        if not is_chargebacked:
+            record_topup_credit(
+                db,
+                origin_key=f"platega-topup:{transaction_id}",
+                amount=amount,
+            )
     elif normalized_status in {"CANCELED", "CANCELLED"}:
         if topup and topup.status == "pending":
             topup.status = "failed"
@@ -357,6 +370,17 @@ def _apply_balance_topup(
             ))
         if topup:
             topup.status = "chargebacked"
+        if original_audit is not None:
+            credited_amount = (
+                Decimal(str(original_audit.new_balance))
+                - Decimal(str(original_audit.old_balance))
+            )
+            if credited_amount > 0:
+                record_topup_chargeback(
+                    db,
+                    origin_key=f"platega-topup-chargeback:{transaction_id}",
+                    amount=credited_amount,
+                )
 
     if topup:
         topup.updated_at = datetime.now(timezone.utc)
@@ -424,8 +448,8 @@ async def create_balance_topup(
             currency=currency,
             payload=custom_payload,
             return_url=(
-                f"{_public_site_url()}/profile/balance"
-                f"?payment=return&reference={reference}"
+                f"{_public_site_url()}/payment/success"
+                f"?type=topup&reference={reference}"
             ),
             failed_url=(
                 f"{_public_site_url()}/profile/balance"
@@ -717,10 +741,12 @@ async def platega_webhook(request: Request, db: Session = Depends(get_db)):
                 if account:
                     increase_user_discount(account)
             fulfill_bot_order(db, bot_order)
+            record_bot_order_sale(db, bot_order)
         elif status in {"CANCELED", "CANCELLED"} and bot_order.status == "pending_payment":
             bot_order.status = "failed"
         elif status in {"CHARGEBACK", "CHARGEBACKED"}:
             bot_order.status = "chargeback"
+            record_bot_order_chargeback(db, bot_order)
 
         db.commit()
         logger.info(
@@ -891,9 +917,15 @@ async def create_item_purchase(
             email=locked_user.email,
             site_user_id=locked_user.id,
             status="new",
+            **snapshot_order_accounting(
+                db,
+                item_id=item["id"],
+                tariff_id=tariff["id"],
+            ),
         )
         db.add(bot_order)
         db.flush()
+        record_bot_order_sale(db, bot_order)
         db.commit()
         return {
             "order_id": external_order_id,
@@ -921,6 +953,11 @@ async def create_item_purchase(
         email=user.email if user else str(payload.email),
         site_user_id=user.id if user else None,
         status="pending_payment",
+        **snapshot_order_accounting(
+            db,
+            item_id=item["id"],
+            tariff_id=tariff["id"],
+        ),
     ))
     db.commit()
 

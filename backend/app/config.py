@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     SMTP_USE_TLS: bool = True
     SMTP_USE_SSL: bool = False
 
+    AMAZON_SES_REGION: str = ""
+    AMAZON_SES_ACCESS_KEY_ID: str = ""
+    AMAZON_SES_SECRET_ACCESS_KEY: str = ""
+    AMAZON_SES_SESSION_TOKEN: str = ""
+    AMAZON_SES_CONFIGURATION_SET: str = ""
+
     # Platega (выплаты / payout)
     PLATEGA_PAYOUT_SECRET: str = ""
 

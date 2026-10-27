@@ -66,6 +66,13 @@ class BotOrder(Base):
     site_user_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     source_order_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True, index=True)
     source_order_item_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    accounting_item_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    accounting_tariff_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    accounting_cost_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    accounting_commission_percent: Mapped[Decimal | None] = mapped_column(
+        Numeric(7, 3),
+        nullable=True,
+    )
     status: Mapped[str] = mapped_column(String(32), default="new", index=True)
     key_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     key_value: Mapped[str | None] = mapped_column(Text, nullable=True)

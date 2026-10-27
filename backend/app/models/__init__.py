@@ -10,6 +10,12 @@ from app.models.admin_payout import AdminPayout
 from app.models.homepage_setting import HomepageSetting
 from app.models.cheat_feature import CheatFeatureCategory, CheatFeatureAssignment
 from app.models.password_reset import PasswordResetToken
+from app.models.accounting import (
+    AccountingEntry,
+    AccountingExpense,
+    AccountingItemCost,
+    AccountingSettings,
+)
 
 __all__ = [
     "User", "BalanceAudit",
@@ -24,4 +30,5 @@ __all__ = [
     "HomepageSetting",
     "CheatFeatureCategory", "CheatFeatureAssignment",
     "PasswordResetToken",
+    "AccountingEntry", "AccountingExpense", "AccountingItemCost", "AccountingSettings",
 ]

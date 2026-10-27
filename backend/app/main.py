@@ -7,7 +7,7 @@ import logging
 from app.config import settings
 from app.database import Base, engine
 from app import models
-from app.api.routes import auth, catalog, products, orders, payments, reviews, blog, emailer, accounts, admin, homepage, uploads, feature_categories, seo
+from app.api.routes import accounting, auth, catalog, products, orders, payments, reviews, blog, emailer, accounts, admin, homepage, uploads, feature_categories, seo
 from app.storage import UPLOADS_DIR
 
 logger = logging.getLogger(__name__)
@@ -26,6 +26,35 @@ try:
             ALTER TABLE users
             ADD COLUMN IF NOT EXISTS discount_percent INTEGER NOT NULL DEFAULT 0,
             ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0
+        """))
+        conn.execute(text("""
+            ALTER TABLE emailer
+            ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            ADD COLUMN IF NOT EXISTS last_send TIMESTAMPTZ,
+            ALTER COLUMN to_email DROP NOT NULL,
+            ADD COLUMN IF NOT EXISTS send_status VARCHAR(16) NOT NULL DEFAULT 'draft',
+            ADD COLUMN IF NOT EXISTS recipient_count INTEGER NOT NULL DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS sent_count INTEGER NOT NULL DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS failed_count INTEGER NOT NULL DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS last_error TEXT
+        """))
+        conn.execute(text("""
+            UPDATE emailer
+            SET send_status = 'sent'
+            WHERE is_sent = TRUE AND send_status = 'draft'
+        """))
+        conn.execute(text("""
+            UPDATE emailer
+            SET send_status = CASE
+                    WHEN sent_count > 0 THEN 'partial'
+                    ELSE 'failed'
+                END,
+                failed_count = GREATEST(recipient_count - sent_count, 0),
+                last_error = COALESCE(
+                    last_error,
+                    'Backend restarted before the campaign finished.'
+                )
+            WHERE send_status = 'sending'
         """))
         conn.execute(text("""
             DO $$
@@ -70,6 +99,13 @@ try:
             ADD COLUMN IF NOT EXISTS email_next_attempt_at TIMESTAMPTZ,
             ADD COLUMN IF NOT EXISTS email_last_error TEXT,
             ADD COLUMN IF NOT EXISTS notification_sent_at TIMESTAMPTZ
+        """))
+        conn.execute(text("""
+            ALTER TABLE bot_orders
+            ADD COLUMN IF NOT EXISTS accounting_item_id INTEGER,
+            ADD COLUMN IF NOT EXISTS accounting_tariff_id INTEGER,
+            ADD COLUMN IF NOT EXISTS accounting_cost_amount NUMERIC(12, 2),
+            ADD COLUMN IF NOT EXISTS accounting_commission_percent NUMERIC(7, 3)
         """))
         conn.execute(text("""
             ALTER TABLE bot_orders
@@ -212,6 +248,7 @@ app.include_router(blog.router)
 app.include_router(emailer.router)
 app.include_router(accounts.router)
 app.include_router(admin.router)
+app.include_router(accounting.router)
 app.include_router(homepage.router)
 app.include_router(uploads.router)
 app.include_router(feature_categories.router)

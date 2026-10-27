@@ -9,7 +9,7 @@ from app.api.deps import get_current_user
 from app.api.routes import payments as payments_route
 from app.database import Base, get_db
 from app.main import app
-from app.models import BalanceAudit, BalanceTopUp, User
+from app.models import AccountingEntry, BalanceAudit, BalanceTopUp, User
 
 
 def make_payment_client(monkeypatch):
@@ -88,6 +88,10 @@ def test_confirmed_topup_callback_credits_once_with_nested_payload(monkeypatch):
             assert user.balance == "110.00"
             assert topup.status == "confirmed"
             assert len(audits) == 1
+            accounting_entries = db.query(AccountingEntry).all()
+            assert len(accounting_entries) == 1
+            assert accounting_entries[0].entry_type == "topup_credit"
+            assert accounting_entries[0].turnover_amount == 100
     finally:
         client.close()
         app.dependency_overrides.clear()
@@ -124,6 +128,12 @@ def test_documented_platega_callback_shape_confirms_and_reverses_topup(monkeypat
             topup = db.query(BalanceTopUp).one()
             assert topup.status == "chargebacked"
             assert db.query(BalanceAudit).count() == 2
+            entries = db.query(AccountingEntry).order_by(AccountingEntry.id).all()
+            assert [entry.entry_type for entry in entries] == [
+                "topup_credit",
+                "topup_chargeback",
+            ]
+            assert sum(entry.turnover_amount for entry in entries) == 0
     finally:
         client.close()
         app.dependency_overrides.clear()
@@ -463,7 +473,7 @@ def test_topup_persists_transaction_and_uses_public_return_url(monkeypatch):
         assert response.json()["amount"] == 100
         assert response.json()["expected_payment_amount"] == 105
         assert captured_request["return_url"] == (
-            f"https://millex.market/profile/balance?payment=return&reference={reference}"
+            f"https://millex.market/payment/success?type=topup&reference={reference}"
         )
         assert captured_request["failed_url"] == (
             f"https://millex.market/profile/balance?payment=failed&reference={reference}"

@@ -11,7 +11,7 @@ from app.api.deps import get_optional_current_user
 from app.api.routes import payments as payments_route
 from app.database import Base, get_db
 from app.main import app
-from app.models import BalanceAudit, BotOrder, Key, User
+from app.models import AccountingEntry, BalanceAudit, BotOrder, Key, User
 
 
 def make_balance_purchase_client(monkeypatch, *, balance="1000"):
@@ -116,6 +116,10 @@ def test_balance_purchase_queues_order_for_admin_without_stock(monkeypatch):
             assert audits[1].old_balance == "900.00"
             assert audits[1].new_balance == "905.00"
             assert audits[1].delta == 5
+            accounting_entry = db.query(AccountingEntry).one()
+            assert accounting_entry.entry_type == "sale"
+            assert accounting_entry.sale_amount == 100
+            assert accounting_entry.turnover_amount == 0
     finally:
         client.close()
         app.dependency_overrides.clear()

@@ -136,7 +136,7 @@ async def send_next_pending_delivery_email() -> bool:
         async with session.begin():
             bot_order = (
                 await session.execute(text("""
-                    SELECT id, external_order_id, email, product, period, amount,
+                    SELECT id, external_order_id, item_alias, email, product, period, amount,
                            key_value, delivery_file, delivery_filename
                     FROM bot_orders
                     WHERE status = 'completed'
@@ -173,6 +173,19 @@ async def send_next_pending_delivery_email() -> bool:
                             "в разделе истории покупок: https://millex.market/profile/history"
                             if bot_order["delivery_file"]
                             else bot_order["key_value"]
+                        ),
+                        instruction_link=(
+                            await session.scalar(
+                                text("""
+                                    SELECT instruction_link
+                                    FROM items
+                                    WHERE alias = :item_alias
+                                    LIMIT 1
+                                """),
+                                {"item_alias": bot_order["item_alias"]},
+                            )
+                            if bot_order["key_value"] and not bot_order["delivery_file"]
+                            else None
                         ),
                         attachment=bot_order["delivery_file"],
                         attachment_name=bot_order["delivery_filename"],
