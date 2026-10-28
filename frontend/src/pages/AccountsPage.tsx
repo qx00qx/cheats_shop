@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import { useModalStore } from "../hooks/useModal";
 import PurchaseModalContent from "../components/PurchaseModalContent";
 import Seo from "../components/Seo";
+import { getMockItemSales } from "../utils/itemSalesMock";
 
 type Account = {
   id: number;
@@ -227,6 +228,9 @@ export default function AccountsPage() {
                            Нет в наличии
                         </span>
                       )}
+                      <span className="acc-sales">
+                        {getMockItemSales(`account-${account.id}`, 0).purchase_count} покупок
+                      </span>
                     </div>
                     <div className="acc-card-footer">
                       <span className="acc-price">{formatPrice(account.price)}</span>

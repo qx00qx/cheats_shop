@@ -1208,7 +1208,7 @@ body::after {
   }
 
   .nx-header__inner {
-    gap: 40px;
+    gap: 10px;
   }
 
   .nx-lang-toggle {
