@@ -2,6 +2,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import headerLogo from "../static/img/header__logo.svg";
 import SupportModal from "./SupportModal";
+import OnlineCounter from "./OnlineCounter";
 import { useAuth } from "../store/auth";
 import { api } from "../api/client";
 
@@ -128,6 +129,8 @@ export default function Header() {
           {/* <NavLink to="/accounts">Аккаунты</NavLink> */}
           <NavLink to="/status">Статусы</NavLink>
         </nav>
+
+        <OnlineCounter />
 
         <div className="nx-actions">
           <button
