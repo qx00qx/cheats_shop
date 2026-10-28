@@ -440,7 +440,7 @@
 
 @media (max-width: 960px) {
   .nx-nav { display: none; }
-  .nx-online { margin-right: 10px; padding: 5px 9px; font-size: 12px; }
+  .nx-online { margin-right: 8px; padding: 4px 7px; gap: 5px; font-size: 11px; }
   .nx-online__label { display: none; }
   .nx-burger { display: flex; }
   .nx-actions { gap: 12px; }
@@ -487,6 +487,13 @@
     padding: 0 12px;
     height: 56px;
     justify-content: space-between;
+  }
+
+  .nx-online {
+    margin-right: 6px;
+    padding: 0;
+    border: none;
+    background: none;
   }
 
   .nx-logo img {
