@@ -557,8 +557,8 @@ export default function GamePage() {
                 <div className="game-card-content">
                   <div className="game-page__product-heading">
                     <h2 className="game-card-title">{item.name}</h2>
+                    <p className="game-page__product-game">Читы на {data.game.title}</p>
                   </div>
-                  <p className="game-page__product-game">Читы на {data.game.title}</p>
 
                   <div className="game-page__product-sales">
                     <strong>{mockSales.purchase_count} покупок</strong>

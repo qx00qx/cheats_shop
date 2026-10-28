@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import heroImg from "../static/img/hero.png";
 import FaqSection from "../components/faqsection/FaqSection";
 import Seo from "../components/Seo";
+import TrustBlock from "../components/TrustBlock";
 import { applyDiscount, getCheatDiscountPercent, type CheatPromotion } from "../utils/cheatPromotion";
 import { getMockItemSales } from "../utils/itemSalesMock";
 
@@ -543,6 +544,8 @@ export default function HomePage() {
             </div>
           </section>
         )}
+
+        <TrustBlock />
 
         {/* Best Cheats */}
         <section className="newhome-section">

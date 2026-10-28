@@ -960,7 +960,7 @@ body::after {
 
 .game-page__product-heading {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
   min-width: 0;
@@ -980,12 +980,19 @@ body::after {
 }
 
 .game-page__product-game {
-  margin: 4px 0 0;
+  margin: 0;
   overflow: hidden;
   flex: 0 0 auto;
-  max-width: 100%;
-  color: rgba(255, 255, 255, 0.48);
-  font-size: 10px;
+  max-width: 48%;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+  background: rgba(5, 15, 11, 0.72);
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1016,10 +1023,9 @@ body::after {
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
-  min-height: 38px;
   min-width: 0;
-  gap: 4px;
-  margin-top: 6px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .game-page__feature-tags--mobile {
@@ -1031,13 +1037,13 @@ body::after {
   max-width: 100%;
   justify-content: center;
   align-items: center;
-  padding: 1px 4px;
+  padding: 4px 7px;
   border: 1px solid rgba(0, 255, 140, 0.3);
-  border-radius: 3px;
+  border-radius: 4px;
   background: rgba(0, 255, 140, 0.12);
   color: #54ffb4;
   text-align: center;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 800;
   box-shadow: 0 0 7px rgba(0, 255, 140, 0.2), inset 0 0 6px rgba(0, 255, 140, 0.08);
   text-shadow: 0 0 6px rgba(0, 255, 140, 0.65);
@@ -1057,7 +1063,7 @@ body::after {
   border-color: rgba(0, 255, 140, 0.45);
   background: rgba(0, 255, 140, 0.14);
   color: #70ffc0;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .game-page__product-footer {
@@ -1065,8 +1071,8 @@ body::after {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-top: auto;
-  padding-top: 6px;
+  margin-top: 8px;
+  padding-top: 0;
   font-size: 10px;
 }
 

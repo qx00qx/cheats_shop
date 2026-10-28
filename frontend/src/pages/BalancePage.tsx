@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { api } from "../api/client";
+import AccountLayout from "../components/AccountLayout";
 import { useAuth } from "../store/auth";
 
 export default function BalancePage() {
@@ -157,17 +158,7 @@ export default function BalancePage() {
   };
 
   return (
-    <div className="lk-wrap">
-      <div className="lk-layout">
-        <div className="lk-sidebar">
-          <div className="lk-sidebar-menu">
-            <a href="/profile" className="lk-sidebar-item">Профиль</a>
-            <a href="/profile/balance" className="lk-sidebar-item active">Пополнить баланс</a>
-            <a href="/profile/history" className="lk-sidebar-item">История покупок</a>
-          </div>
-        </div>
-
-        <div className="lk-card">
+    <AccountLayout activeSection="balance">
           <div className="lk-card-title">Пополнить баланс</div>
           <div className="lk-card-sub">Добавьте средства используя доступные способы оплаты</div>
 
@@ -258,8 +249,6 @@ export default function BalancePage() {
               ))}
             </div>
           )}
-        </div>
-      </div>
-    </div>
+    </AccountLayout>
   );
 }

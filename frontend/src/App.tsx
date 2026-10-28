@@ -34,6 +34,7 @@ import YandexMetrikaTracker from "./components/YandexMetrikaTracker";
 import PromotionModal from "./components/PromotionModal";
 import DomainNoticeModal from "./components/DomainNoticeModal";
 import ScrollToTop from "./components/ScrollToTop";
+import AccountReturnLocationTracker from "./components/AccountReturnLocationTracker";
 import RecentPurchaseToast from "./components/RecentPurchaseToast";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -54,6 +55,7 @@ export default function App() {
     <>
       <YandexMetrikaTracker />
       <ScrollToTop />
+      <AccountReturnLocationTracker />
       <Modal />
       <PromotionModal />
       <DomainNoticeModal />

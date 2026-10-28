@@ -537,13 +537,18 @@
 .similar-cheat-card__image {
   position: relative;
   display: grid;
-  height: 160px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  flex: 0 0 auto;
   place-items: center;
   overflow: hidden;
   background: linear-gradient(135deg, #13211b, #090c0b);
 }
 
 .similar-cheat-card__image img {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -554,7 +559,11 @@
   transform: scale(1.045);
 }
 
-.similar-cheat-card__image > span:first-child {
+.similar-cheat-card__image-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
   color: rgba(255, 255, 255, 0.2);
   font-size: 20px;
   font-weight: 900;
@@ -563,6 +572,7 @@
 
 .similar-cheat-card__match {
   position: absolute;
+  z-index: 2;
   right: 10px;
   bottom: 10px;
   padding: 5px 8px;
@@ -1124,7 +1134,7 @@ a.buy-card__after-payment-item:hover {
   }
 
   .similar-cheat-card__image {
-    height: 120px;
+    aspect-ratio: 16 / 9;
   }
 
   .similar-cheat-card__body {
@@ -1228,13 +1238,15 @@ a.buy-card__after-payment-item:hover {
   }
 
   .similar-cheat-card {
-    display: grid;
-    grid-template-columns: 112px minmax(0, 1fr);
+    display: flex;
+    flex-direction: row;
     flex-basis: 100%;
   }
 
   .similar-cheat-card__image {
-    height: 100%;
+    width: 112px;
+    aspect-ratio: auto;
+    flex: 0 0 112px;
     min-height: 160px;
   }
 
@@ -1249,6 +1261,7 @@ a.buy-card__after-payment-item:hover {
 
   .similar-cheat-card__body {
     min-height: 160px;
+    min-width: 0;
   }
 }
 

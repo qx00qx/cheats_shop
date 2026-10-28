@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Предпросмотр — Почему выбирают MILLEX</title>
+  <style>
+    @font-face {
+      font-family: "Neometric";
+      src: url("./frontend/src/static/fonts/Neometric Black (Regular).woff") format("woff");
+      font-style: normal;
+      font-weight: 900;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Neometric";
+      src: url("./frontend/src/static/fonts/Neometric Black Italic (Bold Italic).woff") format("woff");
+      font-style: italic;
+      font-weight: 900;
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #f5f8f6;
+      background: #070b0a;
+      font-synthesis: none;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      padding: 48px 24px 64px;
+      background:
+        radial-gradient(ellipse at 18% 0%, rgba(0, 255, 148, .11), transparent 38%),
+        radial-gradient(ellipse at 92% 70%, rgba(12, 72, 92, .16), transparent 40%),
+        #070b0a;
+    }
+
+    .section { width: min(1120px, 100%); margin: 0 auto; }
+    .heading { margin: 0 auto 30px; text-align: center; }
+    .heading h1 {
+      margin: 0;
+      font-family: "Neometric", "Segoe UI", sans-serif;
+      font-size: clamp(26px, 4vw, 36px);
+      line-height: 1.15;
+      font-weight: 900;
+      font-style: normal;
+      letter-spacing: -.02em;
+    }
+    .heading h1 span { color: #00e98a; }
+    .heading p {
+      margin: 10px 0 0;
+      color: #899590;
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(230px, auto));
+      gap: 14px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+      padding: 22px;
+      border: 1px solid rgba(95, 205, 157, .16);
+      border-radius: 17px;
+      background: linear-gradient(145deg, rgba(14, 31, 27, .96), rgba(9, 17, 16, .97));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 16px 38px rgba(0,0,0,.17);
+    }
+    .card::after {
+      position: absolute;
+      right: -52px;
+      bottom: -72px;
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      background: rgba(0, 255, 148, .045);
+      filter: blur(26px);
+      content: "";
+      pointer-events: none;
+    }
+    .card--overview { grid-area: 1 / 1 / 2 / 3; }
+    .card--terms { grid-area: 1 / 3 / 2 / 4; }
+    .card--reviews { grid-area: 1 / 4 / 2 / 5; }
+    .card--support { grid-area: 2 / 1 / 3 / 2; }
+    .card--community {
+      display: flex;
+      flex-direction: column;
+      grid-area: 2 / 2 / 3 / 4;
+    }
+    .card--open { grid-area: 2 / 4 / 3 / 5; }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #8caaa0;
+      font-size: 10px;
+      line-height: 1.35;
+      font-weight: 800;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    .eyebrow span { color: #00e98a; }
+    h2 {
+      margin: 0 0 9px;
+      font-family: "Neometric", "Segoe UI", sans-serif;
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: .045em;
+    }
+    .copy {
+      max-width: 410px;
+      margin: 0;
+      color: #91a09a;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .visual {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin-top: 24px;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 58px;
+      padding: 8px 10px;
+      border: 1px solid rgba(0, 255, 163, .14);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .012);
+      color: #f5f5fa;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .step-icon {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      flex: 0 0 28px;
+      place-items: center;
+      border: 1px solid rgba(0, 255, 163, .24);
+      border-radius: 8px;
+      background: rgba(0, 255, 163, .09);
+      color: #43ffc0;
+      box-shadow: inset 0 0 12px rgba(0, 255, 163, .07);
+    }
+    .feature-icon {
+      display: grid;
+      width: 46px;
+      height: 46px;
+      margin: 18px 0 10px;
+      place-items: center;
+      border: 1px solid rgba(0, 255, 148, .24);
+      border-radius: 14px;
+      background: rgba(0, 255, 148, .08);
+      color: #00e98a;
+      font-size: 22px;
+      box-shadow: 0 0 26px rgba(0,255,148,.08);
+    }
+    .action {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-self: flex-start;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      margin-top: auto;
+      padding: 10px 13px;
+      border: 1px solid rgba(0, 255, 148, .24);
+      border-radius: 9px;
+      background: rgba(0, 255, 148, .055);
+      color: #7fffc1;
+      font-size: 12px;
+      font-weight: 750;
+      text-decoration: none;
+    }
+    .card--support {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 21px;
+    }
+    .card--support > div:first-child {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 11px;
+    }
+    .card--support .eyebrow,
+    .card--support h2,
+    .card--support .copy { margin: 0; }
+    .card--support .copy { line-height: 1.65; }
+    .support-footer {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      width: 100%;
+      margin-top: auto;
+      padding-top: 16px;
+    }
+    .support-mark {
+      display: grid;
+      flex: 0 0 auto;
+      width: 48px;
+      height: 48px;
+      place-items: center;
+      color: #00e98a;
+      filter:
+        drop-shadow(0 0 4px rgba(0, 255, 148, .9))
+        drop-shadow(0 0 12px rgba(0, 255, 148, .65))
+        drop-shadow(0 0 22px rgba(0, 255, 148, .35));
+    }
+    .support-mark svg { width: 46px; height: 46px; }
+    .support-footer .action {
+      align-self: flex-end;
+      min-width: 0;
+      margin: 0;
+      padding: 9px 10px;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    .contact-links { display: flex; gap: 8px; margin-top: 16px; }
+    .contact-links a {
+      padding: 8px 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px;
+      color: #b6c4be;
+      font-size: 11px;
+      text-decoration: none;
+    }
+    .contact-links a:hover { border-color: rgba(0,255,148,.3); color: #00ef91; }
+    .contact-links--community {
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 20px;
+    }
+    .contact-links--community a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 11px;
+      min-width: 142px;
+      min-height: 48px;
+      padding: 10px 16px;
+      border-color: rgba(0,255,148,.16);
+      background: rgba(0,255,148,.035);
+      color: #c7d7d0;
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .contact-links--community svg {
+      width: 21px;
+      height: 21px;
+      flex: 0 0 21px;
+      color: #00ed90;
+      filter: drop-shadow(0 0 6px rgba(0,255,148,.55));
+    }
+    .open-list {
+      display: grid;
+      grid-template-columns: max-content max-content;
+      gap: 6px;
+      margin-top: 15px;
+    }
+    .open-list span {
+      padding: 6px 8px;
+      border: 1px solid rgba(95,205,157,.12);
+      border-radius: 7px;
+      color: #acbbb4;
+      font-size: 9px;
+    }
+
+    @media (max-width: 760px) {
+      body { padding: 34px 16px 44px; }
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto;
+      }
+      .card--overview { grid-area: auto / 1 / auto / -1; }
+      .card--terms { grid-area: auto / 1 / auto / 2; }
+      .card--reviews { grid-area: auto / 2 / auto / 3; }
+      .card--support { grid-area: auto / 1 / auto / -1; }
+      .card--community { grid-area: auto / 1 / auto / 2; }
+      .card--open { grid-area: auto / 2 / auto / 3; }
+      .card { padding: 18px; }
+    }
+    @media (max-width: 480px) {
+      .grid { grid-template-columns: 1fr; }
+      .card--overview, .card--terms, .card--reviews, .card--support,
+      .card--community, .card--open { grid-area: auto; }
+      .visual { grid-template-columns: 1fr; margin-top: 17px; }
+      .step { min-height: 48px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="section">
+    <header class="heading">
+      <h1>Почему нас выбирают</h1>
+      <p>Понятные условия, информация о товарах и поддержка, когда она нужна.</p>
+    </header>
+    <div class="grid">
+      <article class="card card--overview">
+        <p class="eyebrow">ПОНЯТНЫЙ ВЫБОР <span>БЕЗ СЮРПРИЗОВ</span></p>
+        <h2>Всё важное — в карточке товара</h2>
+        <p class="copy">Перед покупкой можно изучить описание, функции, тарифы и инструкции — и выбрать подходящий вариант.</p>
+        <div class="visual">
+          <div class="step">
+            <span class="step-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2 22 12 12 22 2 12 12 2Zm0 6.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/>
+              </svg>
+            </span>
+            Описание и скриншоты
+          </div>
+          <div class="step">
+            <span class="step-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2 22 12 12 22 2 12 12 2Zm0 6.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/>
+              </svg>
+            </span>
+            Функции по категориям
+          </div>
+          <div class="step">
+            <span class="step-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2 22 12 12 22 2 12 12 2Zm0 6.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"/>
+              </svg>
+            </span>
+            Тарифы и инструкции
+          </div>
+        </div>
+      </article>
+      <article class="card card--terms">
+        <p class="eyebrow">УСЛОВИЯ ПОКУПКИ</p>
+        <h2>Условия известны заранее</h2>
+        <p class="copy">Срок действия и стоимость тарифа указаны до оформления заказа.</p>
+        <a class="action" href="#">Как проходит покупка <span>→</span></a>
+      </article>
+      <article class="card card--reviews">
+        <p class="eyebrow">ОТЗЫВЫ ПОКУПАТЕЛЕЙ</p>
+        <h2>Выбирайте с опорой на опыт</h2>
+        <p class="copy">Изучите отзывы о товаре и сравните впечатления покупателей перед выбором.</p>
+        <div class="feature-icon">☆</div>
+        <a class="action" href="#">Открыть каталог <span>→</span></a>
+      </article>
+      <article class="card card--support">
+        <div>
+          <p class="eyebrow">ПОДДЕРЖКА ПОКУПАТЕЛЕЙ</p>
+          <h2>Поможем разобраться</h2>
+          <p class="copy">Если возник вопрос по заказу или работе сайта, свяжитесь с командой поддержки.</p>
+        </div>
+        <div class="support-footer">
+          <div class="support-mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none">
+              <path d="M8 26v-4a16 16 0 0 1 32 0v4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              <path d="M8 25h5v11h-2a3 3 0 0 1-3-3v-8Zm32 0h-5v11h2a3 3 0 0 0 3-3v-8Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+              <path d="M35 37a7 7 0 0 1-7 5h-4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+              <circle cx="21" cy="42" r="2" fill="#00e98a"/>
+            </svg>
+          </div>
+          <a class="action" href="#">Написать в поддержку <span>→</span></a>
+        </div>
+      </article>
+      <article class="card card--community">
+        <p class="eyebrow">КАНАЛЫ MILLEX</p>
+        <h2>Новости и общение</h2>
+        <p class="copy">Следите за обновлениями и присоединяйтесь к сообществу в привычном канале.</p>
+        <div class="contact-links contact-links--community">
+          <a href="https://t.me/millexnews">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M21.7 4.4 18.5 20c-.2 1.1-.9 1.4-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.2L6 13.6 1.1 12c-1.1-.3-1.1-1 .2-1.5L20.4 3c.9-.3 1.7.2 1.3 1.4Z"/>
+            </svg>
+            Telegram ↗
+          </a>
+          <a href="https://discord.gg/millex">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M19.7 5.3A18.2 18.2 0 0 0 15.2 4l-.6 1.2a16.7 16.7 0 0 0-5.2 0L8.8 4a18.2 18.2 0 0 0-4.5 1.3C1.5 9.5.7 13.6 1.1 17.7a18.4 18.4 0 0 0 5.5 2.8l1.2-1.9-1.9-.9.5-.4c3.7 1.7 7.6 1.7 11.2 0l.5.4-1.9.9 1.2 1.9a18.4 18.4 0 0 0 5.5-2.8c.5-4.7-.8-8.8-3.2-12.4ZM8.7 14.5c-1.1 0-2-1-2-2.2s.9-2.2 2-2.2 2 .9 2 2.2-.9 2.2-2 2.2Zm6.6 0c-1.1 0-2-1-2-2.2s.9-2.2 2-2.2 2 .9 2 2.2-.9 2.2-2 2.2Z"/>
+            </svg>
+            Discord ↗
+          </a>
+        </div>
+      </article>
+      <article class="card card--open">
+        <p class="eyebrow">ОТКРЫТЫЕ УСЛОВИЯ</p>
+        <h2>Правила доступны всем</h2>
+        <p class="copy">Ознакомьтесь с условиями сервиса и правилами до оформления заказа.</p>
+        <div class="open-list"><span>Понятные правила</span><span>Информация о заказе</span></div>
+        <a class="action" href="#">Условия сервиса <span>→</span></a>
+      </article>
+    </div>
+  </main>
+</body>
+</html>

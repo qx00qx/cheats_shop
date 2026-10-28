@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import AccountLayout from "../components/AccountLayout";
 import { useAuth } from "../store/auth";
 
 export default function ProfilePage() {
@@ -13,9 +14,8 @@ export default function ProfilePage() {
   if (!user) return null;
 
   return (
-    <div className="container" style={{ paddingTop: 40 }}>
-      <h1 className="page-title">Личный кабинет</h1>
-
+    <AccountLayout activeSection="profile">
+      <h1 className="lk-card-title">Профиль</h1>
       <div className="card" style={{ marginBottom: 24 }}>
         <div>
           <b>Ник:</b> {user.username}
@@ -28,14 +28,13 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 12 }}>
-        <Link to="/orders" className="btn-ghost">
-          Мои заказы
-        </Link>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <Link to="/profile/history" className="btn-ghost">История покупок</Link>
+        <Link to="/profile/balance" className="btn-ghost">Пополнить баланс</Link>
         <Link to="/2fa" className="btn-ghost">
           2FA
         </Link>
       </div>
-    </div>
+    </AccountLayout>
   );
 }

@@ -64,13 +64,14 @@ type SimilarCheat = {
   name: string;
   alias: string;
   image?: string | null;
+  gallery?: GalleryMedia[];
   price?: number | null;
   promo_discount_percent?: number;
   promo_expires_at?: string;
   feature_categories?: FeatureCategory[];
 };
 
-type GameItemsResponse = {
+type CatalogItemsResponse = {
   items: SimilarCheat[];
 };
 
@@ -107,6 +108,59 @@ function normalizeFeature(value: string): string {
   return value.trim().toLocaleLowerCase("ru-RU").replace(/\s+/g, " ");
 }
 
+function getSharedFeatures(
+  currentCategories: FeatureCategory[],
+  candidateCategories: FeatureCategory[],
+): string[] {
+  const currentByCategory = new Map<number, Map<string, string>>();
+  currentCategories.forEach((category) => {
+    const features = new Map<string, string>();
+    category.features.forEach((feature) => {
+      const normalized = normalizeFeature(feature);
+      if (normalized && !features.has(normalized)) {
+        features.set(normalized, feature.trim());
+      }
+    });
+    currentByCategory.set(category.category_id, features);
+  });
+
+  const candidateByCategory = new Map<number, Map<string, string>>();
+  candidateCategories.forEach((category) => {
+    const features = new Map<string, string>();
+    category.features.forEach((feature) => {
+      const normalized = normalizeFeature(feature);
+      if (normalized && !features.has(normalized)) {
+        features.set(normalized, feature.trim());
+      }
+    });
+    candidateByCategory.set(category.category_id, features);
+  });
+
+  const shared = new Map<string, string>();
+  currentByCategory.forEach((currentFeatures, categoryId) => {
+    const candidateFeatures = candidateByCategory.get(categoryId);
+    if (!candidateFeatures) return;
+
+    currentFeatures.forEach((feature, normalized) => {
+      if (!shared.has(normalized) && candidateFeatures.has(normalized)) {
+        shared.set(normalized, feature);
+      }
+    });
+  });
+  return [...shared.values()];
+}
+
+function formatSharedFeatureCount(count: number): string {
+  const remainder100 = count % 100;
+  const remainder10 = count % 10;
+  const noun = remainder10 === 1 && remainder100 !== 11
+    ? "общая функция"
+    : remainder10 >= 2 && remainder10 <= 4 && (remainder100 < 12 || remainder100 > 14)
+      ? "общие функции"
+      : "общих функций";
+  return `${count} ${noun}`;
+}
+
 export default function ItemPage() {
   const { alias } = useParams<{ alias: string }>();
   const { openModal } = useModalStore();
@@ -120,6 +174,7 @@ export default function ItemPage() {
   const [similarCheats, setSimilarCheats] = useState<
     { cheat: SimilarCheat; sharedFeatures: string[] }[]
   >([]);
+  const [similarCheatsLoading, setSimilarCheatsLoading] = useState(false);
   const similarCheatsTrackRef = useRef<HTMLDivElement>(null);
   const itemSalesTrackRef = useRef<HTMLDivElement>(null);
   const itemSales = item ? getMockItemSales(item.alias) : null;
@@ -168,66 +223,60 @@ export default function ItemPage() {
   }, [alias]);
 
   useEffect(() => {
-    if (!item?.game_alias) {
+    if (!item) {
       setSimilarCheats([]);
-      return;
-    }
-
-    const currentFeatures = new Set(
-      (item.feature_categories ?? [])
-        .flatMap((category) => category.features)
-        .map(normalizeFeature)
-        .filter(Boolean),
-    );
-    if (currentFeatures.size < 2) {
-      setSimilarCheats([]);
+      setSimilarCheatsLoading(false);
       return;
     }
 
     const controller = new AbortController();
     setSimilarCheats([]);
+    setSimilarCheatsLoading(true);
 
-    fetch(`/api/catalog/games/${encodeURIComponent(item.game_alias)}`, {
+    fetch("/api/catalog/similar-items", {
       signal: controller.signal,
     })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json() as Promise<GameItemsResponse>;
+        return response.json() as Promise<CatalogItemsResponse>;
       })
       .then(({ items }) => {
         const matches = items
           .filter((candidate) => candidate.alias !== item.alias)
           .map((cheat) => {
-            const candidateFeatures = new Map<string, string>();
-            (cheat.feature_categories ?? [])
-              .flatMap((category) => category.features)
-              .forEach((feature) => {
-                const normalized = normalizeFeature(feature);
-                if (normalized && !candidateFeatures.has(normalized)) {
-                  candidateFeatures.set(normalized, feature.trim());
-                }
-              });
-            const sharedFeatures = [...currentFeatures]
-              .filter((feature) => candidateFeatures.has(feature))
-              .map((feature) => candidateFeatures.get(feature) ?? feature);
+            const sharedFeatures = getSharedFeatures(
+              item.feature_categories ?? [],
+              cheat.feature_categories ?? [],
+            );
             return { cheat, sharedFeatures };
           })
-          .filter((match) => match.sharedFeatures.length >= 2)
+          .filter((match) => match.sharedFeatures.length > 0)
           .sort((first, second) =>
             second.sharedFeatures.length - first.sharedFeatures.length
             || first.cheat.name.localeCompare(second.cheat.name, "ru"),
           );
 
-        setSimilarCheats(matches);
+        const recommendations = matches.length > 0
+          ? matches
+          : items
+            .filter((candidate) => candidate.alias !== item.alias)
+            .slice(0, 12)
+            .map((cheat) => ({ cheat, sharedFeatures: [] }));
+        setSimilarCheats(recommendations);
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
         console.error("Failed to load similar cheats:", error);
         setSimilarCheats([]);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setSimilarCheatsLoading(false);
+        }
       });
 
     return () => controller.abort();
-  }, [item?.alias, item?.feature_categories, item?.game_alias]);
+  }, [item?.alias, item?.feature_categories]);
 
   const tabs = useMemo(() => parseTabs(item?.tabs), [item?.tabs]);
   const cleanDescription = useMemo(
@@ -335,6 +384,9 @@ export default function ItemPage() {
     ...(item.amd === 1 ? ["AMD"] : []),
   ];
   const supportedClients = item.platforms?.trim();
+  const hasSimilarFeatureMatches = similarCheats.some(
+    ({ sharedFeatures }) => sharedFeatures.length > 0,
+  );
 
   return (
     <div className="item-page">
@@ -862,16 +914,20 @@ export default function ItemPage() {
           </aside>
         </div>
 
-        {!!item.feature_categories?.length && item.game_alias && (
+        {(similarCheatsLoading || similarCheats.length > 0) && (
           <section className="similar-cheats" aria-labelledby="similar-cheats-title">
             <div className="similar-cheats__header">
               <div>
-                <span className="similar-cheats__eyebrow">Для {item.game_title || "этой игры"}</span>
+                <span className="similar-cheats__eyebrow">
+                  {hasSimilarFeatureMatches ? "По совпадающим функциям" : "Рекомендуем ознакомиться"}
+                </span>
                 <h2 className="similar-cheats__title" id="similar-cheats-title">
-                  Похожие читы
+                  {hasSimilarFeatureMatches ? "Похожие читы" : "Другие читы"}
                 </h2>
                 <p className="similar-cheats__description">
-                  Подобраны по общим функциям этого чита
+                  {hasSimilarFeatureMatches
+                    ? "Подобраны по общим функциям, в том числе для других игр"
+                    : "Другие товары из каталога"}
                 </p>
               </div>
               {similarCheats.length > 1 && (
@@ -911,6 +967,11 @@ export default function ItemPage() {
                   const discountedPrice = itemDiscountPercent
                     ? applyDiscount(price, itemDiscountPercent)
                     : price;
+                  const screenshot = cheat.gallery?.find(
+                    (media) => media.type === "image" && isSafeMediaUrl(media.url),
+                  )?.url ?? (
+                    cheat.image && isSafeMediaUrl(cheat.image) ? cheat.image : null
+                  );
 
                   return (
                     <Link
@@ -919,22 +980,34 @@ export default function ItemPage() {
                       to={`/item/${encodeURIComponent(cheat.alias)}`}
                     >
                       <div className="similar-cheat-card__image">
-                        {cheat.image ? (
-                          <img src={cheat.image} alt="" loading="lazy" />
-                        ) : (
-                          <span aria-hidden="true">MILLEX</span>
-                        )}
-                        <span className="similar-cheat-card__match">
-                          {sharedFeatures.length} общие функции
+                        <span className="similar-cheat-card__image-fallback" aria-hidden="true">
+                          MILLEX
                         </span>
+                        {screenshot && (
+                          <img
+                            src={screenshot}
+                            alt=""
+                            loading="lazy"
+                            onError={(event) => {
+                              event.currentTarget.style.display = "none";
+                            }}
+                          />
+                        )}
+                        {sharedFeatures.length > 0 && (
+                          <span className="similar-cheat-card__match">
+                            {formatSharedFeatureCount(sharedFeatures.length)}
+                          </span>
+                        )}
                       </div>
                       <div className="similar-cheat-card__body">
                         <h3 className="similar-cheat-card__name">{cheat.name}</h3>
-                        <div className="similar-cheat-card__features">
-                          {sharedFeatures.slice(0, 3).map((feature) => (
-                            <span key={normalizeFeature(feature)}>{feature}</span>
-                          ))}
-                        </div>
+                        {sharedFeatures.length > 0 && (
+                          <div className="similar-cheat-card__features">
+                            {sharedFeatures.slice(0, 3).map((feature) => (
+                              <span key={normalizeFeature(feature)}>{feature}</span>
+                            ))}
+                          </div>
+                        )}
                         <div className="similar-cheat-card__footer">
                           {Number.isFinite(price) && price > 0 ? (
                             <span className="similar-cheat-card__price">
@@ -957,9 +1030,7 @@ export default function ItemPage() {
                 </div>
               </div>
             ) : (
-              <p className="similar-cheats__empty">
-                Пока нет других читов этой игры с двумя или более общими функциями.
-              </p>
+              <p className="similar-cheats__empty">Подбираем читы из каталога…</p>
             )}
           </section>
         )}

@@ -550,6 +550,43 @@ def get_game_items(slug: str, db: Session = Depends(get_db)):
     }
 
 
+@router.get("/similar-items")
+def get_similar_items(db: Session = Depends(get_db)):
+    rows = db.execute(text("""
+        SELECT id, name, alias, price, preview, video, gallery
+        FROM items
+        WHERE status = 1 AND COALESCE(vis, 1) = 1
+        ORDER BY id DESC
+    """)).mappings().all()
+    feature_categories = _feature_assignments_by_item(
+        db,
+        [item["id"] for item in rows],
+    )
+    promotion_fields = cheat_promotion_public_fields()
+
+    public_items = []
+    for row in rows:
+        item = dict(row)
+        gallery = [
+            media
+            for media in _item_gallery(
+                item.get("gallery"),
+                item.get("preview"),
+                item.get("video"),
+            )
+            if media["type"] == "image"
+        ]
+        item["gallery"] = gallery[:1]
+        item["image"] = gallery[0]["url"] if gallery else None
+        item.pop("preview", None)
+        item.pop("video", None)
+        item.update(promotion_fields)
+        item["feature_categories"] = feature_categories.get(item["id"], [])
+        public_items.append(item)
+
+    return {"items": public_items}
+
+
 @router.get("/home-items")
 def get_home_items(db: Session = Depends(get_db)):
     rows = db.execute(text("""

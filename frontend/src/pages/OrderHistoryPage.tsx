@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { OrdersAPI, Order } from "../api/orders";
+import AccountLayout from "../components/AccountLayout";
 
 export default function OrderHistoryPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -87,25 +88,25 @@ export default function OrderHistoryPage() {
 
   if (loading) {
     return (
-      <div className="container" style={{ paddingTop: 60 }}>
+      <AccountLayout activeSection="history">
         <h1 className="lk-card-title">История покупок</h1>
         {downloadError && <div className="error" role="alert">{downloadError}</div>}
         <p className="muted">Загрузка...</p>
-      </div>
+      </AccountLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="container" style={{ paddingTop: 60 }}>
+      <AccountLayout activeSection="history">
         <h1 className="lk-card-title">История покупок</h1>
         <div className="error">{error}</div>
-      </div>
+      </AccountLayout>
     );
   }
 
   return (
-    <div className="container" style={{ paddingTop: 60 }}>
+    <AccountLayout activeSection="history">
       <h1 className="lk-card-title">История покупок</h1>
 
       {orders.length === 0 ? (
@@ -235,6 +236,6 @@ export default function OrderHistoryPage() {
           ))}
         </div>
       )}
-    </div>
+    </AccountLayout>
   );
 }
