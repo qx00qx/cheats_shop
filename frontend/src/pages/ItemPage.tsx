@@ -830,7 +830,7 @@ export default function ItemPage() {
 
               {item.promo_discount_percent && discountPercent >= item.promo_discount_percent && (
                 <div className="item-promo-banner">
-                  <strong>Скидка 15% для всех</strong>
+                  <strong>Скидка {item.promo_discount_percent}% для всех</strong>
                     <span>
                       Накопительная скидка сохраняется и продолжит расти. Скидки не складываются:
                       сейчас применяется большая, а ваша личная скидка будет доступна после акции.

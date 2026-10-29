@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { type CheatPromotion } from "../utils/cheatPromotion";
 
-const DISMISSED_KEY = "millex_15_percent_promotion_dismissed";
+const DISMISSED_KEY = "millex_11_percent_promotion_dismissed";
 
 export default function PromotionModal() {
   const [promotion, setPromotion] = useState<CheatPromotion | null>(null);
@@ -78,8 +78,8 @@ export default function PromotionModal() {
           ×
         </button>
         <span className="home-promo-kicker">Только одну неделю</span>
-        <div className="home-promo-value">−15%</div>
-        <h2 id="home-promo-title">Скидка для ВСЕХ 15%</h2>
+        <div className="home-promo-value">−{promotion.discount_percent}%</div>
+        <h2 id="home-promo-title">Скидка для ВСЕХ {promotion.discount_percent}%</h2>
         <p>
           Скидка действует на все читы. Личная накопительная скидка не сгорает и продолжает
           расти, но не складывается с акцией — она будет применяться после её окончания.

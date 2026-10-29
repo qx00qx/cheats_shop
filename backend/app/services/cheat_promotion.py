@@ -2,8 +2,8 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 
 
-CHEAT_PROMOTION_DISCOUNT_PERCENT = 15
-CHEAT_PROMOTION_STARTS_AT = datetime(2026, 10, 17, 13, 4, 27, tzinfo=timezone.utc)
+CHEAT_PROMOTION_DISCOUNT_PERCENT = 11
+CHEAT_PROMOTION_STARTS_AT = datetime(2026, 10, 28, 0, 0, 0, tzinfo=timezone.utc)
 CHEAT_PROMOTION_ENDS_AT = CHEAT_PROMOTION_STARTS_AT + timedelta(days=7)
 MAX_LOYALTY_DISCOUNT_PERCENT = 10
 
