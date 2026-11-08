@@ -327,9 +327,7 @@ export default function ItemPage() {
     ...(item.win10 === 1 ? ["Windows 10"] : []),
     ...(item.win11 === 1 ? ["Windows 11"] : []),
   ];
-  const systemsText = supportedSystems.length
-    ? supportedSystems.join(" • ")
-    : item.systems?.trim();
+  const systemsText = item.systems?.trim() || supportedSystems.join(" • ");
   const supportedProcessors = [
     ...(item.intel === 1 ? ["Intel"] : []),
     ...(item.amd === 1 ? ["AMD"] : []),
