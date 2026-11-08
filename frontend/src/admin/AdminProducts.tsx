@@ -82,6 +82,26 @@ type AdminItem = Omit<ItemDraft, "feature_categories"> & {
   feature_categories?: AssignedFeatureCategory[];
 };
 
+type ItemSort = "newest" | "oldest" | "name" | "game" | "price-asc" | "price-desc" | "active" | "inactive";
+
+const itemSortOptions: { value: ItemSort; label: string }[] = [
+  { value: "newest", label: "Сначала новые" },
+  { value: "oldest", label: "Сначала старые" },
+  { value: "name", label: "По названию" },
+  { value: "game", label: "По игре" },
+  { value: "price-asc", label: "Сначала дешевле" },
+  { value: "price-desc", label: "Сначала дороже" },
+  { value: "active", label: "Сначала активные" },
+  { value: "inactive", label: "Сначала отключённые" },
+];
+
+const getMinPrice = (item: AdminItem): number => {
+  const prices = item.tariffs
+    .map((tariff) => Number(tariff.price))
+    .filter(Number.isFinite);
+  return prices.length ? Math.min(...prices) : Number.POSITIVE_INFINITY;
+};
+
 const emptyDraft = (): ItemDraft => ({
   name: "",
   alias: "",
@@ -238,6 +258,33 @@ export default function AdminProducts() {
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const videoUploadTarget = useRef<number | null>(null);
   const videoFileInput = useRef<HTMLInputElement>(null);
+  const [itemSort, setItemSort] = useState<ItemSort>("newest");
+
+  const sortedItems = [...items].sort((left, right) => {
+    const newestFirst = right.id - left.id;
+    switch (itemSort) {
+      case "oldest":
+        return left.id - right.id;
+      case "name":
+        return left.name.localeCompare(right.name, "ru", { sensitivity: "base" }) || newestFirst;
+      case "game":
+        return (left.game_title || "").localeCompare(right.game_title || "", "ru", { sensitivity: "base" }) || newestFirst;
+      case "price-asc":
+      case "price-desc": {
+        const leftPrice = getMinPrice(left);
+        const rightPrice = getMinPrice(right);
+        if (leftPrice === rightPrice) return newestFirst;
+        if (itemSort === "price-asc") return leftPrice < rightPrice ? -1 : 1;
+        return leftPrice > rightPrice ? -1 : 1;
+      }
+      case "active":
+        return right.status - left.status || newestFirst;
+      case "inactive":
+        return left.status - right.status || newestFirst;
+      default:
+        return newestFirst;
+    }
+  });
 
   useEffect(() => {
     void loadGames();
@@ -962,13 +1009,29 @@ export default function AdminProducts() {
         )}
       </section>
       {listError && <p role="alert" style={{ color: "#ff8a8a", marginBottom: 16 }}>{listError}</p>}
+      {!listLoading && items.length > 0 && (
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
+            Сортировка
+            <select
+              className="input"
+              value={itemSort}
+              onChange={(event) => setItemSort(event.target.value as ItemSort)}
+            >
+              {itemSortOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
       {listLoading ? (
         <p className="muted">Загрузка читов...</p>
       ) : items.length === 0 ? (
         <p className="muted">Читы не найдены.</p>
       ) : (
         <div style={{ display: "grid", gap: 8 }}>
-          {items.map((item) => (
+          {sortedItems.map((item) => (
             <div key={item.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: 14, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10 }}>
               <div style={{ minWidth: 0 }}>
                 <strong>{item.name}</strong>
