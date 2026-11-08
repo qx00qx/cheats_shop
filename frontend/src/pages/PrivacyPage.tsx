@@ -54,6 +54,7 @@ export default function PrivacyPage() {
   return (
     <main className="policy-page">
       <Seo
+        pageKey="privacy"
         title="Политика конфиденциальности"
         description="Политика конфиденциальности MILLEX. Информация о сборе, обработке, хранении и защите персональных данных пользователей сервиса millex.market."
       />

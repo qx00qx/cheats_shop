@@ -77,6 +77,7 @@ def test_delivery_email_includes_purchased_cheat_key(monkeypatch):
 
     message = FakeSMTP.message
     assert message["To"] == "guest@example.test"
+    assert message["Subject"] == "Ваш заказ MILLEX #43"
     body = message.get_body(preferencelist=("plain",)).get_content()
     assert "Данные для получения товара:" in body
     assert "TEST-CHEAT-KEY" in body

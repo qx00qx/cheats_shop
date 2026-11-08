@@ -7,6 +7,10 @@ type Game = {
   id: number;
   title: string;
   slug: string;
+  seo_title: string;
+  seo_description: string;
+  seo_image: string;
+  seo_noindex: boolean;
   cover_url: string | null;
   sort_order: number;
   is_active: boolean;
@@ -16,6 +20,10 @@ type Game = {
 type GameDraft = {
   title: string;
   slug: string;
+  seo_title: string;
+  seo_description: string;
+  seo_image: string;
+  seo_noindex: boolean;
   cover_url: string;
   sort_order: number;
   is_active: boolean;
@@ -24,6 +32,10 @@ type GameDraft = {
 const emptyDraft = (): GameDraft => ({
   title: "",
   slug: "",
+  seo_title: "",
+  seo_description: "",
+  seo_image: "",
+  seo_noindex: false,
   cover_url: "",
   sort_order: 999,
   is_active: true,
@@ -162,6 +174,10 @@ export default function AdminGames() {
     setDraft({
       title: game.title,
       slug: game.slug,
+      seo_title: game.seo_title || "",
+      seo_description: game.seo_description || "",
+      seo_image: game.seo_image || "",
+      seo_noindex: game.seo_noindex || false,
       cover_url: game.cover_url || "",
       sort_order: game.sort_order,
       is_active: game.is_active,
@@ -175,6 +191,10 @@ export default function AdminGames() {
       await api.put(`/catalog/admin/games/${game.id}`, {
         title: game.title,
         slug: game.slug,
+        seo_title: game.seo_title || "",
+        seo_description: game.seo_description || "",
+        seo_image: game.seo_image || "",
+        seo_noindex: game.seo_noindex || false,
         cover_url: game.cover_url || "",
         sort_order: game.sort_order,
         is_active: !game.is_active,
@@ -235,6 +255,45 @@ export default function AdminGames() {
             onChange={(event) => updateDraft("cover_url", event.target.value)}
             style={inputStyle}
           />
+        </label>
+        <label>
+          <span style={{ display: "block", marginBottom: 6 }}>SEO title</span>
+          <input
+            maxLength={255}
+            value={draft.seo_title}
+            onChange={(event) => updateDraft("seo_title", event.target.value)}
+            style={inputStyle}
+            placeholder="Пусто — использовать название игры"
+          />
+        </label>
+        <label style={{ gridColumn: "1 / -1" }}>
+          <span style={{ display: "block", marginBottom: 6 }}>SEO description</span>
+          <textarea
+            maxLength={500}
+            rows={3}
+            value={draft.seo_description}
+            onChange={(event) => updateDraft("seo_description", event.target.value)}
+            style={inputStyle}
+            placeholder="Пусто — сформировать описание каталога игры"
+          />
+        </label>
+        <label style={{ gridColumn: "1 / -1" }}>
+          <span style={{ display: "block", marginBottom: 6 }}>SEO image</span>
+          <input
+            maxLength={2000}
+            value={draft.seo_image}
+            onChange={(event) => updateDraft("seo_image", event.target.value)}
+            style={inputStyle}
+            placeholder="URL или путь к изображению"
+          />
+        </label>
+        <label style={{ display: "flex", gap: 8, alignItems: "center", minHeight: 40 }}>
+          <input
+            type="checkbox"
+            checked={draft.seo_noindex}
+            onChange={(event) => updateDraft("seo_noindex", event.target.checked)}
+          />
+          Запретить индексацию страницы игры
         </label>
         <div style={{ gridColumn: "1 / -1", display: "grid", gap: 8 }}>
           <label>

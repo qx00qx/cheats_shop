@@ -49,7 +49,7 @@ export default function ContactPromoBanner() {
   }, []);
 
   const isExcludedPage =
-    pathname.startsWith("/admin") || pathname === "/login" || pathname === "/register";
+    pathname.startsWith("/asdnrwe") || pathname === "/login" || pathname === "/register";
 
   if (!isVisible || isDismissed || isExcludedPage) {
     return null;

@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 class Settings:
     bot_token: str
     mini_app_url: str
+    telegram_proxy_url: str
 
 
 def load_settings() -> Settings:
@@ -19,4 +20,17 @@ def load_settings() -> Settings:
     if parsed_url.scheme != "https" or not parsed_url.netloc:
         raise ValueError("MINI_APP_URL must be a valid HTTPS URL")
 
-    return Settings(bot_token=bot_token, mini_app_url=mini_app_url)
+    telegram_proxy_url = os.environ.get("TELEGRAM_PROXY_URL", "").strip()
+    if telegram_proxy_url and urlparse(telegram_proxy_url).scheme not in {
+        "http",
+        "https",
+        "socks5",
+        "socks5h",
+    }:
+        raise ValueError("TELEGRAM_PROXY_URL must use HTTP(S) or SOCKS5")
+
+    return Settings(
+        bot_token=bot_token,
+        mini_app_url=mini_app_url,
+        telegram_proxy_url=telegram_proxy_url,
+    )

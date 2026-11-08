@@ -23,6 +23,17 @@ try:
         conn.execute(text("SELECT pg_advisory_xact_lock(741205190)"))
         Base.metadata.create_all(bind=conn)
         conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS global_promotions (
+                campaign_key VARCHAR(64) PRIMARY KEY,
+                starts_at TIMESTAMPTZ NOT NULL
+            )
+        """))
+        conn.execute(text("""
+            INSERT INTO global_promotions (campaign_key, starts_at)
+            VALUES ('launch_week_15', now())
+            ON CONFLICT (campaign_key) DO NOTHING
+        """))
+        conn.execute(text("""
             ALTER TABLE users
             ADD COLUMN IF NOT EXISTS discount_percent INTEGER NOT NULL DEFAULT 0,
             ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0
@@ -32,6 +43,7 @@ try:
             ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             ADD COLUMN IF NOT EXISTS last_send TIMESTAMPTZ,
             ALTER COLUMN to_email DROP NOT NULL,
+            ADD COLUMN IF NOT EXISTS is_sent BOOLEAN NOT NULL DEFAULT FALSE,
             ADD COLUMN IF NOT EXISTS send_status VARCHAR(16) NOT NULL DEFAULT 'draft',
             ADD COLUMN IF NOT EXISTS recipient_count INTEGER NOT NULL DEFAULT 0,
             ADD COLUMN IF NOT EXISTS sent_count INTEGER NOT NULL DEFAULT 0,
@@ -178,7 +190,11 @@ try:
         if inspect(conn).has_table("items"):
             conn.execute(text("""
                 ALTER TABLE items
-                ADD COLUMN IF NOT EXISTS gallery JSONB
+                ADD COLUMN IF NOT EXISTS gallery JSONB,
+                ADD COLUMN IF NOT EXISTS seo_title VARCHAR(255),
+                ADD COLUMN IF NOT EXISTS seo_description TEXT,
+                ADD COLUMN IF NOT EXISTS seo_image TEXT,
+                ADD COLUMN IF NOT EXISTS seo_noindex BOOLEAN NOT NULL DEFAULT FALSE
             """))
             conn.execute(text("""
                 ALTER TABLE items
@@ -216,6 +232,20 @@ try:
                         ELSE '[]'::jsonb
                     END
                 WHERE gallery IS NULL
+            """))
+        if inspect(conn).has_table("categories"):
+            conn.execute(text("""
+                ALTER TABLE categories
+                ADD COLUMN IF NOT EXISTS seo_title VARCHAR(255),
+                ADD COLUMN IF NOT EXISTS seo_description TEXT,
+                ADD COLUMN IF NOT EXISTS seo_image TEXT,
+                ADD COLUMN IF NOT EXISTS seo_noindex BOOLEAN NOT NULL DEFAULT FALSE
+            """))
+        if inspect(conn).has_table("blog"):
+            conn.execute(text("""
+                ALTER TABLE blog
+                ADD COLUMN IF NOT EXISTS seo_image TEXT,
+                ADD COLUMN IF NOT EXISTS seo_noindex BOOLEAN NOT NULL DEFAULT FALSE
             """))
     print("Tables created successfully")
 except Exception as e:

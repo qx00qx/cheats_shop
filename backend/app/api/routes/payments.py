@@ -33,6 +33,7 @@ from app.services.accounting import (
 from app.services.cheat_promotion import (
     discounted_cheat_price,
     effective_cheat_discount_percent,
+    get_promotion_start,
 )
 from app.services.user_discount import increase_user_discount
 
@@ -870,6 +871,7 @@ async def create_item_purchase(
 
     discount_percent = effective_cheat_discount_percent(
         locked_user.discount_percent if locked_user else 0,
+        starts_at=get_promotion_start(db),
     )
     amount = discounted_cheat_price(
         Decimal(str(tariff["price"])),

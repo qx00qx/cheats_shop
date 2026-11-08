@@ -100,6 +100,7 @@ export default function CatalogPage() {
   return (
     <div className="catalog-page">
       <Seo
+        pageKey="catalog"
         title="Каталог читов для игр — описания и цены"
         description="Каталог читов MILLEX для популярных игр. Смотрите описание, функции, статусы и цены, выбирайте подходящий игровой софт."
         image={heroImage}

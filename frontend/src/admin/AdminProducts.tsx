@@ -24,6 +24,10 @@ type AssignedFeatureCategory = {
 type ItemDraft = {
   name: string;
   alias: string;
+  seo_title: string;
+  seo_description: string;
+  seo_image: string;
+  seo_noindex: boolean;
   game_id: number;
   systems: string;
   text: string;
@@ -85,6 +89,10 @@ type AdminItem = Omit<ItemDraft, "feature_categories"> & {
 const emptyDraft = (): ItemDraft => ({
   name: "",
   alias: "",
+  seo_title: "",
+  seo_description: "",
+  seo_image: "",
+  seo_noindex: false,
   game_id: 0,
   systems: "",
   text: "",
@@ -137,7 +145,7 @@ const emptyDraft = (): ItemDraft => ({
   tariffs: [{ label: "1 day", price: "" }],
 });
 
-const textFields: { key: Exclude<keyof ItemDraft, "game_id" | "tariffs" | "gallery" | "feature_categories" | "status" | "vis" | "home" | "top" | "hit" | "undetected" | "win10" | "win11" | "amd" | "intel">; label: string; rows?: number }[] = [
+const textFields: { key: Exclude<keyof ItemDraft, "game_id" | "tariffs" | "gallery" | "feature_categories" | "status" | "vis" | "home" | "top" | "hit" | "undetected" | "win10" | "win11" | "amd" | "intel" | "seo_noindex">; label: string; rows?: number }[] = [
   { key: "systems", label: "Поддерживаемые системы" },
   { key: "preview", label: "Ссылка на обложку" },
   { key: "text", label: "Описание", rows: 5 },
@@ -606,6 +614,53 @@ export default function AdminProducts() {
               {games.map((game) => <option key={game.id} value={game.id}>{game.title}</option>)}
             </select>
           </div>
+          <fieldset style={{ border: "1px solid rgba(0,255,140,0.2)", borderRadius: 12, padding: 14 }}>
+            <legend>SEO</legend>
+            <div style={{ display: "grid", gap: 12 }}>
+              <div style={fieldStyle}>
+                <label style={labelStyle} htmlFor="item-seo-title">SEO title</label>
+                <input
+                  id="item-seo-title"
+                  className="input"
+                  maxLength={255}
+                  value={draft.seo_title}
+                  onChange={(event) => setDraft({ ...draft, seo_title: event.target.value })}
+                  placeholder="Пусто — сформировать из названия чита"
+                />
+              </div>
+              <div style={fieldStyle}>
+                <label style={labelStyle} htmlFor="item-seo-description">SEO description</label>
+                <textarea
+                  id="item-seo-description"
+                  className="input"
+                  maxLength={500}
+                  rows={3}
+                  value={draft.seo_description}
+                  onChange={(event) => setDraft({ ...draft, seo_description: event.target.value })}
+                  placeholder="Пусто — сформировать из описания чита"
+                />
+              </div>
+              <div style={fieldStyle}>
+                <label style={labelStyle} htmlFor="item-seo-image">SEO image</label>
+                <input
+                  id="item-seo-image"
+                  className="input"
+                  maxLength={2000}
+                  value={draft.seo_image}
+                  onChange={(event) => setDraft({ ...draft, seo_image: event.target.value })}
+                  placeholder="URL или путь к изображению"
+                />
+              </div>
+              <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input
+                  type="checkbox"
+                  checked={draft.seo_noindex}
+                  onChange={(event) => setDraft({ ...draft, seo_noindex: event.target.checked })}
+                />
+                Запретить индексацию страницы товара
+              </label>
+            </div>
+          </fieldset>
           <div style={fieldStyle}>
             <label style={labelStyle} htmlFor="item-security-status">Статус безопасности чита</label>
             <select

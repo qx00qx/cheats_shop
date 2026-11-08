@@ -8,6 +8,10 @@ type AdminArticle = {
   alias: string;
   name: string;
   text: string;
+  seo_title: string;
+  seo_description: string;
+  seo_image: string;
+  seo_noindex: boolean;
   vis: number;
   date: string | null;
 };
@@ -233,6 +237,10 @@ export default function AdminArticles() {
   const [editorVersion, setEditorVersion] = useState(0);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [seoTitle, setSeoTitle] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
+  const [seoImage, setSeoImage] = useState("");
+  const [seoNoindex, setSeoNoindex] = useState(false);
 
   const loadArticles = async () => {
     setLoading(true);
@@ -257,6 +265,10 @@ export default function AdminArticles() {
     setEditingId(null);
     setTitle("");
     setContent("");
+    setSeoTitle("");
+    setSeoDescription("");
+    setSeoImage("");
+    setSeoNoindex(false);
     setFormError("");
   };
 
@@ -265,6 +277,10 @@ export default function AdminArticles() {
     setEditingId(article.id);
     setTitle(article.name);
     setContent(article.text);
+    setSeoTitle(article.seo_title || "");
+    setSeoDescription(article.seo_description || "");
+    setSeoImage(article.seo_image || "");
+    setSeoNoindex(article.seo_noindex || false);
     setFormError("");
   };
 
@@ -278,6 +294,10 @@ export default function AdminArticles() {
         {
           name: article.name,
           text: article.text,
+          seo_title: article.seo_title || "",
+          seo_description: article.seo_description || "",
+          seo_image: article.seo_image || "",
+          seo_noindex: article.seo_noindex || false,
           vis: nextVisibility,
         },
       );
@@ -302,7 +322,14 @@ export default function AdminArticles() {
     setSaving(true);
     setFormError("");
     try {
-      const payload = { name: title, text: sanitizeBlogHtml(content) };
+      const payload = {
+        name: title,
+        text: sanitizeBlogHtml(content),
+        seo_title: seoTitle,
+        seo_description: seoDescription,
+        seo_image: seoImage,
+        seo_noindex: seoNoindex,
+      };
       if (editingId === null) {
         await api.post("/blog/admin/articles", payload);
       } else {
@@ -344,6 +371,47 @@ export default function AdminArticles() {
             maxLength={255}
             required
           />
+        </label>
+        <label>
+          <span>SEO title</span>
+          <input
+            className="input"
+            value={seoTitle}
+            onChange={(event) => setSeoTitle(event.target.value)}
+            maxLength={255}
+            placeholder="Пусто — использовать название статьи"
+          />
+        </label>
+        <label>
+          <span>SEO description</span>
+          <textarea
+            className="input"
+            value={seoDescription}
+            onChange={(event) => setSeoDescription(event.target.value)}
+            maxLength={500}
+            rows={3}
+            placeholder="Пусто — использовать краткое описание статьи"
+          />
+        </label>
+        <label>
+          <span>SEO image</span>
+          <input
+            className="input"
+            value={seoImage}
+            onChange={(event) => setSeoImage(event.target.value)}
+            maxLength={2000}
+            placeholder="URL или путь к изображению"
+          />
+        </label>
+        <label className="admin-articles__editor-field">
+          <span>
+            <input
+              type="checkbox"
+              checked={seoNoindex}
+              onChange={(event) => setSeoNoindex(event.target.checked)}
+            />{" "}
+            Запретить индексацию статьи
+          </span>
         </label>
         <div className="admin-articles__editor-field">
           <span>Текст статьи</span>

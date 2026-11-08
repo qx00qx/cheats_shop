@@ -12,9 +12,9 @@ class EmailerCreate(BaseModel):
 
 class EmailerStatus(BaseModel):
     configured: bool
-    region: str | None
-    credentials_source: str
-    active_recipient_count: int
+    provider: str
+    api_url: str
+    recipient_count: int
 
 
 class EmailerOut(BaseModel):

@@ -35,6 +35,10 @@ type Item = {
   id: number;
   name: string;
   alias: string;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  seo_image?: string | null;
+  seo_noindex?: boolean;
   text?: string | null;
   tabs?: string | null;
   systems?: string | null;
@@ -68,11 +72,10 @@ type SimilarCheat = {
   price?: number | null;
   promo_discount_percent?: number;
   promo_expires_at?: string;
-  feature_categories?: FeatureCategory[];
 };
 
 type CatalogItemsResponse = {
-  items: SimilarCheat[];
+  items: (SimilarCheat & { shared_features: string[] })[];
 };
 
 function parseTabs(value?: string | null): string[] {
@@ -106,48 +109,6 @@ function formatSaleDate(value: string): string {
 
 function normalizeFeature(value: string): string {
   return value.trim().toLocaleLowerCase("ru-RU").replace(/\s+/g, " ");
-}
-
-function getSharedFeatures(
-  currentCategories: FeatureCategory[],
-  candidateCategories: FeatureCategory[],
-): string[] {
-  const currentByCategory = new Map<number, Map<string, string>>();
-  currentCategories.forEach((category) => {
-    const features = new Map<string, string>();
-    category.features.forEach((feature) => {
-      const normalized = normalizeFeature(feature);
-      if (normalized && !features.has(normalized)) {
-        features.set(normalized, feature.trim());
-      }
-    });
-    currentByCategory.set(category.category_id, features);
-  });
-
-  const candidateByCategory = new Map<number, Map<string, string>>();
-  candidateCategories.forEach((category) => {
-    const features = new Map<string, string>();
-    category.features.forEach((feature) => {
-      const normalized = normalizeFeature(feature);
-      if (normalized && !features.has(normalized)) {
-        features.set(normalized, feature.trim());
-      }
-    });
-    candidateByCategory.set(category.category_id, features);
-  });
-
-  const shared = new Map<string, string>();
-  currentByCategory.forEach((currentFeatures, categoryId) => {
-    const candidateFeatures = candidateByCategory.get(categoryId);
-    if (!candidateFeatures) return;
-
-    currentFeatures.forEach((feature, normalized) => {
-      if (!shared.has(normalized) && candidateFeatures.has(normalized)) {
-        shared.set(normalized, feature);
-      }
-    });
-  });
-  return [...shared.values()];
 }
 
 function formatSharedFeatureCount(count: number): string {
@@ -233,7 +194,7 @@ export default function ItemPage() {
     setSimilarCheats([]);
     setSimilarCheatsLoading(true);
 
-    fetch("/api/catalog/similar-items", {
+    fetch(`/api/catalog/similar-items/${encodeURIComponent(item.alias)}`, {
       signal: controller.signal,
     })
       .then((response) => {
@@ -241,28 +202,10 @@ export default function ItemPage() {
         return response.json() as Promise<CatalogItemsResponse>;
       })
       .then(({ items }) => {
-        const matches = items
-          .filter((candidate) => candidate.alias !== item.alias)
-          .map((cheat) => {
-            const sharedFeatures = getSharedFeatures(
-              item.feature_categories ?? [],
-              cheat.feature_categories ?? [],
-            );
-            return { cheat, sharedFeatures };
-          })
-          .filter((match) => match.sharedFeatures.length > 0)
-          .sort((first, second) =>
-            second.sharedFeatures.length - first.sharedFeatures.length
-            || first.cheat.name.localeCompare(second.cheat.name, "ru"),
-          );
-
-        const recommendations = matches.length > 0
-          ? matches
-          : items
-            .filter((candidate) => candidate.alias !== item.alias)
-            .slice(0, 12)
-            .map((cheat) => ({ cheat, sharedFeatures: [] }));
-        setSimilarCheats(recommendations);
+        setSimilarCheats(items.map(({ shared_features, ...cheat }) => ({
+          cheat,
+          sharedFeatures: shared_features,
+        })));
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
@@ -391,10 +334,11 @@ export default function ItemPage() {
   return (
     <div className="item-page">
       <Seo
-        title={`Чит ${item.name}${item.game_title ? ` для ${item.game_title}` : ""} — описание и цены читов`}
-        description={seoDescription}
+        title={item.seo_title || `Чит ${item.name}${item.game_title ? ` для ${item.game_title}` : ""} — описание и цены читов`}
+        description={item.seo_description || seoDescription}
         canonicalPath={`/item/${encodeURIComponent(item.alias)}`}
-        image={gameImage}
+        image={item.seo_image || gameImage}
+        noIndex={item.seo_noindex}
         type="product"
         structuredData={[
           {
@@ -828,15 +772,17 @@ export default function ItemPage() {
                 )}
               </div>
 
-              {item.promo_discount_percent && discountPercent >= item.promo_discount_percent && (
+              {typeof item.promo_discount_percent === "number" &&
+                item.promo_discount_percent > 0 &&
+                discountPercent >= item.promo_discount_percent && (
                 <div className="item-promo-banner">
                   <strong>Скидка {item.promo_discount_percent}% для всех</strong>
-                    <span>
-                      Накопительная скидка сохраняется и продолжит расти. Скидки не складываются:
-                      сейчас применяется большая, а ваша личная скидка будет доступна после акции.
-                    </span>
-                  </div>
-              )}
+                  <span>
+                    Накопительная скидка сохраняется и продолжит расти. Скидки не складываются:
+                    сейчас применяется большая, а ваша личная скидка будет доступна после акции.
+                  </span>
+                </div>
+                )}
 
 
               <div className="buy-card__block">

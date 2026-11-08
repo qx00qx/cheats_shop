@@ -285,15 +285,6 @@ def send_delivery_email(
     attachment: bytes | None = None,
     attachment_name: str | None = None,
 ) -> None:
-    if not settings.smtp_host or not settings.smtp_from_email:
-        raise RuntimeError("SMTP email delivery is not configured")
-    if settings.smtp_use_ssl and settings.smtp_use_tls:
-        raise RuntimeError("Configure either SMTP SSL or STARTTLS, not both")
-
-    message = EmailMessage()
-    message["Subject"] = f"Ваш заказ MILLEX #{order_id}"
-    message["From"] = settings.smtp_from_email
-    message["To"] = to_email
     order_details = [f"Заказ №{order_id}", f"Товар / чит: {product}"]
     if period:
         order_details.append(f"Период: {period}")
@@ -323,6 +314,15 @@ def send_delivery_email(
             "После этого самостоятельно запустите Steam. Не запускайте файл на другом "
             "устройстве; для выхода используйте «Сменить пользователя», а не Sign Out."
         )
+    if not settings.smtp_host or not settings.smtp_from_email:
+        raise RuntimeError("SMTP email delivery is not configured")
+    if settings.smtp_use_ssl and settings.smtp_use_tls:
+        raise RuntimeError("Configure either SMTP SSL or STARTTLS, not both")
+
+    message = EmailMessage()
+    message["Subject"] = f"Ваш заказ MILLEX #{order_id}"
+    message["From"] = settings.smtp_from_email
+    message["To"] = to_email
     message.set_content(message_body)
 
     if delivery_text and not attachment:

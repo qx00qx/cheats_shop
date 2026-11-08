@@ -8,8 +8,8 @@ import ContactPromoBanner from "./ContactPromoBanner";
 
 export default function Layout() {
   const location = useLocation();
-  const hideFooter = location.pathname === "/login" || location.pathname === "/register" || location.pathname.startsWith("/admin");
-  const hideJivo = location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/reset-password" || location.pathname.startsWith("/admin");
+  const hideFooter = location.pathname === "/login" || location.pathname === "/register" || location.pathname.startsWith("/asdnrwe");
+  const hideJivo = location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/reset-password" || location.pathname.startsWith("/asdnrwe");
 
   return (
     <div className="app">

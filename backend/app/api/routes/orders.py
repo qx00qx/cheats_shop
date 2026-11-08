@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
@@ -13,6 +14,11 @@ from app.services.order_delivery import (
     fulfill_store_order,
 )
 from app.services.user_discount import increase_user_discount
+from app.services.cheat_promotion import (
+    discounted_cheat_price,
+    effective_cheat_discount_percent,
+    get_promotion_start,
+)
 
 router = APIRouter(prefix="/api/orders", tags=["orders"])
 
@@ -46,8 +52,11 @@ async def create_order(
         .with_for_update()
         .first()
     )
-    discount_percent = min(10, max(0, int(locked_user.discount_percent or 0)))
-    price_multiplier = (100 - discount_percent) / 100
+    promotion_start = get_promotion_start(db)
+    discount_percent = effective_cheat_discount_percent(
+        locked_user.discount_percent,
+        starts_at=promotion_start,
+    )
 
     total = 0
     order = Order(
@@ -63,7 +72,12 @@ async def create_order(
         plan = db.get(ProductPlan, it.plan_id)
         if not plan or plan.product_id != it.product_id:
             raise HTTPException(400, f"Plan {it.plan_id} not found")
-        line = round(float(plan.price) * it.qty * price_multiplier, 2)
+        line = float(
+            discounted_cheat_price(
+                Decimal(str(plan.price)) * it.qty,
+                discount_percent,
+            )
+        )
         total += line
         db.add(OrderItem(
             order_id=order.id,

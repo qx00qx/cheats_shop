@@ -6,6 +6,7 @@ import Seo from "../components/Seo";
 import TrustBlock from "../components/TrustBlock";
 import { applyDiscount, getCheatDiscountPercent, type CheatPromotion } from "../utils/cheatPromotion";
 import { getMockItemSales } from "../utils/itemSalesMock";
+import { getCheatPromotion, getHomeItems, type FeaturedCheat } from "../api/catalog";
 
 interface GameCard {
   href: string;
@@ -13,22 +14,6 @@ interface GameCard {
   image: string;
   count: number;
   minPrice: number;
-}
-
-interface FeaturedCheat {
-  id: number;
-  name: string;
-  alias: string;
-  game_title: string | null;
-  image: string | null;
-  price: number | null;
-  top: number;
-  hit: number;
-  undetected: number;
-  security_status?: number | string;
-  promo_discount_percent?: number;
-  promo_expires_at?: string;
-  feature_categories: { title: string }[];
 }
 
 interface RecentPurchase {
@@ -132,21 +117,13 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    fetch("/api/catalog/home-items")
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json() as Promise<FeaturedCheat[]>;
-      })
+    getHomeItems()
       .then(setFeaturedCheats)
       .catch((error) => {
         console.error("Failed to load homepage featured cheats:", error);
       });
 
-    fetch("/api/catalog/promotion")
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json() as Promise<CheatPromotion>;
-      })
+    getCheatPromotion()
       .then((result) => {
         setPromotion(result);
       })
@@ -228,6 +205,7 @@ export default function HomePage() {
   return (
     <div className="newhome-root">
       <Seo
+        pageKey="home"
         title="Читы для игр и игровой софт"
         description="Каталог игрового софта MILLEX: читы и инструменты для популярных игр. Изучите описание, возможности и доступные предложения."
         image={heroImg}

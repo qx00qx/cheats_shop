@@ -81,7 +81,11 @@ def admin_client():
                 images_characters TEXT,
                 parent INTEGER DEFAULT 0,
                 vis INTEGER DEFAULT 1,
-                posled INTEGER DEFAULT 999
+                posled INTEGER DEFAULT 999,
+                seo_title TEXT,
+                seo_description TEXT,
+                seo_image TEXT,
+                seo_noindex BOOLEAN DEFAULT FALSE
             )
         """))
         connection.execute(text("""
@@ -89,7 +93,11 @@ def admin_client():
                 id INTEGER PRIMARY KEY,
                 "categoryData" TEXT,
                 status INTEGER,
-                vis INTEGER DEFAULT 1
+                vis INTEGER DEFAULT 1,
+                seo_title TEXT,
+                seo_description TEXT,
+                seo_image TEXT,
+                seo_noindex BOOLEAN DEFAULT FALSE
             )
         """))
         connection.execute(text(

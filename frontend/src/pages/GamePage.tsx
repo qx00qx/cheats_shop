@@ -78,6 +78,10 @@ type GameResponse = {
     id: number;
     title: string;
     slug: string;
+    seo_title?: string | null;
+    seo_description?: string | null;
+    seo_image?: string | null;
+    seo_noindex?: boolean;
     image?: string;
   };
   items: Item[];
@@ -230,9 +234,10 @@ export default function GamePage() {
   return (
     <div className="container game-page" style={{ paddingTop: 32 }}>
       <Seo
-        title={`Читы для ${data.game.title} — каталог читов`}
-        description={`Каталог игрового софта для ${data.game.title}: сравните доступные читы, их функции и предложения в MILLEX.`}
-        image={gameImage}
+        title={data.game.seo_title || `Читы для ${data.game.title} — каталог читов`}
+        description={data.game.seo_description || `Каталог игрового софта для ${data.game.title}: сравните доступные читы, их функции и предложения в MILLEX.`}
+        image={data.game.seo_image || gameImage}
+        noIndex={data.game.seo_noindex}
         structuredData={[
           {
             "@context": "https://schema.org",

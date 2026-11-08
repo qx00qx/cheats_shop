@@ -14,6 +14,21 @@ services:
       timeout: 5s
       retries: 5
 
+  legacy-db:
+    image: mysql:8.0
+    profiles: ["legacy-import"]
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${LEGACY_MYSQL_PASSWORD:-}
+      MYSQL_DATABASE: millex
+    volumes:
+      - legacy_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -31,7 +46,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       CORS_ORIGINS: https://millex.market,https://www.millex.market,http://localhost:5173,http://127.0.0.1:5173
       SITE_URL: https://millex.market
-      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_HOST: ${SMTP_HOST:-mail.hosting.reg.ru}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
@@ -43,6 +58,11 @@ services:
       AMAZON_SES_SECRET_ACCESS_KEY: ${AMAZON_SES_SECRET_ACCESS_KEY:-}
       AMAZON_SES_SESSION_TOKEN: ${AMAZON_SES_SESSION_TOKEN:-}
       AMAZON_SES_CONFIGURATION_SET: ${AMAZON_SES_CONFIGURATION_SET:-}
+      LEGACY_MYSQL_HOST: ${LEGACY_MYSQL_HOST:-legacy-db}
+      LEGACY_MYSQL_PORT: ${LEGACY_MYSQL_PORT:-3306}
+      LEGACY_MYSQL_USER: ${LEGACY_MYSQL_USER:-root}
+      LEGACY_MYSQL_PASSWORD: ${LEGACY_MYSQL_PASSWORD:-}
+      LEGACY_MYSQL_DATABASE: ${LEGACY_MYSQL_DATABASE:-millex}
     depends_on:
       db:
         condition: service_healthy
@@ -70,13 +90,14 @@ services:
     env_file:
       - ./millex-bot/.env
     environment:
-      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_HOST: ${SMTP_HOST:-mail.hosting.reg.ru}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USERNAME: ${SMTP_USERNAME:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
       SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
       SMTP_USE_SSL: ${SMTP_USE_SSL:-false}
+      TELEGRAM_PROXY_URL: ${TELEGRAM_PROXY_URL:-}
     depends_on:
       db:
         condition: service_healthy
@@ -91,6 +112,8 @@ services:
     environment:
       BOT_TOKEN: ${CLIENT_BOT_TOKEN:-}
       MINI_APP_URL: ${CLIENT_MINI_APP_URL:-https://millex.market}
+      TELEGRAM_PROXY_URL: ${TELEGRAM_PROXY_URL:-}
 
 volumes:
   pgdata:
+  legacy_mysql_data:

@@ -6,7 +6,7 @@ export const ACCOUNT_RETURN_LOCATION_KEY = "millex_account_return_location";
 const nonReturnablePaths = [
   /^\/(?:profile|orders)(?:\/|$)/,
   /^\/(?:login|register|forgot-password|reset-password|2fa)(?:\/|$)/,
-  /^\/admin(?:\/|$)/,
+  /^\/asdnrwe(?:\/|$)/,
 ];
 
 export default function AccountReturnLocationTracker() {

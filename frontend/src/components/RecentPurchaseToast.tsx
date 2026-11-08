@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
+import { getHomeItems } from "../api/catalog";
 import { getMockItemSales } from "../utils/itemSalesMock";
-
-interface FeaturedItem {
-  alias: string;
-  name: string;
-}
 
 interface RecentPurchase {
   product: string;
@@ -44,13 +40,7 @@ export default function RecentPurchaseToast() {
   const [purchaseIndex, setPurchaseIndex] = useState(0);
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    fetch("/api/catalog/home-items", { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json() as Promise<FeaturedItem[]>;
-      })
+    getHomeItems()
       .then((items) => {
         const recentPurchases = items
           .flatMap((item) =>
@@ -69,11 +59,8 @@ export default function RecentPurchaseToast() {
         setPurchaseIndex(0);
       })
       .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
         console.error("Failed to load recent purchase notification data:", error);
       });
-
-    return () => controller.abort();
   }, []);
 
   useEffect(() => {

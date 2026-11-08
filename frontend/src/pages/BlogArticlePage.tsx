@@ -107,7 +107,8 @@ export default function BlogArticlePage() {
         title={article.seo_title || article.name}
         description={article.seo_description || article.excerpt || `Материал из блога MILLEX: ${article.name}.`}
         canonicalPath={`/blog/${encodeURIComponent(article.alias)}`}
-        image={article.cover_url}
+        image={article.seo_image || article.cover_url}
+        noIndex={article.seo_noindex}
         type="article"
         structuredData={{
           "@context": "https://schema.org",

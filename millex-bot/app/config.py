@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     smtp_from_email: str = Field(default="", alias="SMTP_FROM_EMAIL")
     smtp_use_tls: bool = Field(default=True, alias="SMTP_USE_TLS")
     smtp_use_ssl: bool = Field(default=False, alias="SMTP_USE_SSL")
+    telegram_proxy_url: str = Field(default="", alias="TELEGRAM_PROXY_URL")
 
     model_config = SettingsConfigDict(
         env_file=".env",

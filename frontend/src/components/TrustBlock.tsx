@@ -20,15 +20,14 @@ export default function TrustBlock() {
       <div className="trust-block__grid">
         <article className="trust-block__card trust-block__card--overview">
           <p className="trust-block__eyebrow">
-            ПОНЯТНЫЙ ВЫБОР <span>БЕЗ СЮРПРИЗОВ</span>
+            НАКОПИТЕЛЬНЫЕ <span>СКИДКИ</span>
           </p>
-          <h3>Всё важное — в карточке товара</h3>
+          <h3>Скидка за каждую покупку</h3>
           <p className="trust-block__copy">
-            Перед покупкой можно изучить описание, функции, тарифы и инструкции — и выбрать
-            подходящий вариант.
+            Скидка растёт с каждой покупкой: <strong>1 000 ₽ = 1%</strong> — до 10%.
           </p>
           <div className="trust-block__visual">
-            {["Описание и скриншоты", "Функции по категориям", "Тарифы и инструкции"].map((label) => (
+            {["1 000 ₽ = 1%", "Скидка растёт", "До 10%"].map((label) => (
               <div className="trust-block__step" key={label}>
                 <span className="trust-block__step-icon">
                   <DiamondIcon />
@@ -40,35 +39,36 @@ export default function TrustBlock() {
         </article>
 
         <article className="trust-block__card trust-block__card--terms">
-          <p className="trust-block__eyebrow">УСЛОВИЯ ПОКУПКИ</p>
-          <h3>Условия известны заранее</h3>
-          <p className="trust-block__copy">
-            Срок действия и стоимость тарифа указаны до оформления заказа.
-          </p>
-          <Link className="trust-block__action" to="/catalog">
-            Как проходит покупка <span aria-hidden="true">→</span>
+          <p className="trust-block__eyebrow">ГАРАНТИЯ ВОЗВРАТА</p>
+          <h3>Не работает — вернём деньги</h3>
+          <p className="trust-block__copy">Без вопросов и бюрократии.</p>
+          <Link className="trust-block__action" to="/user-agreement">
+            Условия гарантии <span aria-hidden="true">→</span>
           </Link>
         </article>
 
         <article className="trust-block__card trust-block__card--reviews">
-          <p className="trust-block__eyebrow">ОТЗЫВЫ ПОКУПАТЕЛЕЙ</p>
-          <h3>Выбирайте с опорой на опыт</h3>
+          <p className="trust-block__eyebrow">ПОДДЕРЖКА 24/7</p>
+          <h3>Ответим днём и ночью</h3>
           <p className="trust-block__copy">
-            Изучите отзывы о товаре и сравните впечатления покупателей перед выбором.
+            Решим вопрос оперативно, а не шаблонами.
           </p>
           <div className="trust-block__feature-icon" aria-hidden="true">☆</div>
-          <Link className="trust-block__action" to="/catalog">
-            Открыть каталог <span aria-hidden="true">→</span>
-          </Link>
+          <a
+            className="trust-block__action"
+            href="https://t.me/Millex"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Написать в поддержку <span aria-hidden="true">→</span>
+          </a>
         </article>
 
         <article className="trust-block__card trust-block__card--support">
           <div className="trust-block__support-content">
-            <p className="trust-block__eyebrow">ПОДДЕРЖКА ПОКУПАТЕЛЕЙ</p>
-            <h3>Поможем разобраться</h3>
-            <p className="trust-block__copy">
-              Если возник вопрос по заказу или работе сайта, свяжитесь с командой поддержки.
-            </p>
+            <p className="trust-block__eyebrow">ОПЫТ И НАДЁЖНОСТЬ</p>
+            <h3>45 000+ пользователей доверяют нам</h3>
+            <p className="trust-block__copy">На рынке с 2022 года.</p>
           </div>
           <div className="trust-block__support-footer">
             <div className="trust-block__support-mark" aria-hidden="true">
@@ -79,47 +79,52 @@ export default function TrustBlock() {
                 <circle cx="21" cy="42" r="2" fill="#00e98a" />
               </svg>
             </div>
-            <a className="trust-block__action" href="https://t.me/Millex" target="_blank" rel="noopener noreferrer">
-              Написать в поддержку <span aria-hidden="true">→</span>
-            </a>
+            <Link className="trust-block__action" to="/catalog">
+              Опыт с 2022 года <span aria-hidden="true">→</span>
+            </Link>
           </div>
         </article>
 
         <article className="trust-block__card trust-block__card--community">
-          <p className="trust-block__eyebrow">КАНАЛЫ MILLEX</p>
-          <h3>Новости и общение</h3>
+          <p className="trust-block__eyebrow">ПРОЗРАЧНЫЕ УСЛОВИЯ</p>
+          <h3>Правила и тарифы до оплаты</h3>
           <p className="trust-block__copy">
-            Следите за обновлениями и присоединяйтесь к сообществу в привычном канале.
+            Все правила и тарифы видны до оплаты.
           </p>
           <div className="trust-block__contact-links trust-block__contact-links--community">
-            <a href="https://t.me/millexnews" target="_blank" rel="noopener noreferrer">
+            <Link to="/user-agreement">
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M21.7 4.4 18.5 20c-.2 1.1-.9 1.4-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.2L6 13.6 1.1 12c-1.1-.3-1.1-1 .2-1.5L20.4 3c.9-.3 1.7.2 1.3 1.4Z" />
               </svg>
-              Telegram ↗
-            </a>
-            <a href="https://discord.gg/millex" target="_blank" rel="noopener noreferrer">
+              Условия сервиса ↗
+            </Link>
+            <Link to="/catalog">
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M19.7 5.3A18.2 18.2 0 0 0 15.2 4l-.6 1.2a16.7 16.7 0 0 0-5.2 0L8.8 4a18.2 18.2 0 0 0-4.5 1.3C1.5 9.5.7 13.6 1.1 17.7a18.4 18.4 0 0 0 5.5 2.8l1.2-1.9-1.9-.9.5-.4c3.7 1.7 7.6 1.7 11.2 0l.5.4-1.9.9 1.2 1.9a18.4 18.4 0 0 0 5.5-2.8c.5-4.7-.8-8.8-3.2-12.4ZM8.7 14.5c-1.1 0-2-1-2-2.2s.9-2.2 2-2.2 2 .9 2 2.2-.9 2.2-2 2.2Zm6.6 0c-1.1 0-2-1-2-2.2s.9-2.2 2-2.2 2 .9 2 2.2-.9 2.2-2 2.2Z" />
               </svg>
-              Discord ↗
-            </a>
+              Каталог тарифов ↗
+            </Link>
           </div>
         </article>
 
         <article className="trust-block__card trust-block__card--open">
-          <p className="trust-block__eyebrow">ОТКРЫТЫЕ УСЛОВИЯ</p>
-          <h3>Правила доступны всем</h3>
+          <p className="trust-block__eyebrow">СООБЩЕСТВО</p>
+          <h3>Живой чат игроков</h3>
           <p className="trust-block__copy">
-            Ознакомьтесь с условиями сервиса и правилами до оформления заказа.
+            Делимся опытом, помогаем друг другу.
           </p>
           <div className="trust-block__open-list">
-            <span>Понятные правила</span>
-            <span>Информация о заказе</span>
+            <span>Общение игроков</span>
+            <span>Обмен опытом</span>
           </div>
-          <Link className="trust-block__action" to="/user-agreement">
-            Условия сервиса <span aria-hidden="true">→</span>
-          </Link>
+          <a
+            className="trust-block__action"
+            href="https://discord.gg/millex"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Вступить в чат <span aria-hidden="true">→</span>
+          </a>
         </article>
       </div>
     </section>

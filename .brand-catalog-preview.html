@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Предпросмотр — каталог брендов MILLEX</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #f5f8f6;
+      background: #070908;
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 75% 4%, rgba(0, 255, 148, .1), transparent 34%),
+        #070908;
+    }
+
+    .site-header {
+      height: 72px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      background: rgba(7,9,8,.88);
+    }
+
+    .header-inner, .container {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .header-inner {
+      display: flex;
+      height: 100%;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .logo {
+      color: #f6f7f6;
+      font-size: 23px;
+      font-weight: 900;
+      letter-spacing: .12em;
+    }
+
+    .logo span { color: #00e98a; }
+    .nav { display: flex; gap: 25px; color: rgba(255,255,255,.66); font-size: 13px; }
+    .nav strong { color: #00e98a; }
+    .account {
+      padding: 9px 14px;
+      border: 1px solid rgba(0,255,148,.22);
+      border-radius: 9px;
+      color: #d9e8e0;
+      font-size: 12px;
+    }
+
+    main { padding: 27px 0 70px; }
+    .breadcrumbs { margin-bottom: 18px; color: rgba(255,255,255,.42); font-size: 12px; }
+    .breadcrumbs span { color: #e8f1ec; }
+
+    .page-switch {
+      display: inline-flex;
+      gap: 4px;
+      margin-bottom: 22px;
+      padding: 4px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 11px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .page-switch button {
+      padding: 9px 14px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: rgba(255,255,255,.6);
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .page-switch button.is-active {
+      background: rgba(0,255,148,.13);
+      color: #6df8b7;
+    }
+
+    .view[hidden] { display: none; }
+
+    .catalog-hero {
+      position: relative;
+      display: flex;
+      min-height: 230px;
+      align-items: center;
+      overflow: hidden;
+      padding: 34px 40px;
+      border: 1px solid rgba(0,255,148,.13);
+      border-radius: 20px;
+      background:
+        radial-gradient(ellipse at 80% 40%, rgba(0,255,148,.17), transparent 36%),
+        linear-gradient(110deg, #101815, #0b100e 70%);
+    }
+
+    .catalog-hero::after {
+      position: absolute;
+      right: 4%;
+      bottom: -180px;
+      width: 420px;
+      height: 420px;
+      border: 1px solid rgba(0,255,148,.12);
+      border-radius: 50%;
+      box-shadow: 0 0 0 40px rgba(0,255,148,.025), 0 0 0 85px rgba(0,255,148,.018);
+      content: "";
+    }
+
+    .hero-content { position: relative; z-index: 1; max-width: 650px; }
+    .eyebrow {
+      color: #59e9a6;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 9px 0 9px; font-size: clamp(30px, 4vw, 43px); line-height: 1.08; }
+    .hero-content p { margin: 0; color: rgba(255,255,255,.56); font-size: 14px; }
+    .hero-mark {
+      position: absolute;
+      right: 11%;
+      color: rgba(77,244,164,.13);
+      font-size: 94px;
+      font-weight: 900;
+      letter-spacing: -.08em;
+    }
+
+    .catalog-tools {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 22px 0 27px;
+    }
+
+    .search {
+      display: flex;
+      min-width: 230px;
+      height: 46px;
+      flex: 1;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 11px;
+      background: #101211;
+      color: rgba(255,255,255,.4);
+    }
+
+    .search input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: white;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .sort {
+      height: 46px;
+      padding: 0 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 11px;
+      background: #101211;
+      color: #c3cec8;
+      font: inherit;
+      font-size: 12px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    h2 { margin: 0; font-size: 20px; }
+    .section-subtitle { margin: 5px 0 0; color: rgba(255,255,255,.46); font-size: 12px; }
+    .all-link { color: #61eda9; font-size: 12px; text-decoration: none; white-space: nowrap; }
+
+    .brand-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .brand-card {
+      position: relative;
+      display: flex;
+      min-height: 126px;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      padding: 17px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(20,27,24,.98), rgba(11,14,13,.98));
+      text-align: left;
+      cursor: pointer;
+      transition: border-color .18s ease, transform .18s ease;
+    }
+
+    .brand-card:hover, .brand-card.is-active {
+      transform: translateY(-2px);
+      border-color: rgba(0,255,148,.42);
+    }
+
+    .brand-card::after {
+      position: absolute;
+      right: -25px;
+      bottom: -44px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: rgba(0,255,148,.1);
+      filter: blur(23px);
+      content: "";
+    }
+
+    .brand-card__top, .brand-card__bottom { position: relative; z-index: 1; }
+    .brand-monogram {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border: 1px solid rgba(0,255,148,.24);
+      border-radius: 10px;
+      background: rgba(0,255,148,.07);
+      color: #55f0a8;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .brand-name { display: block; margin-top: 12px; color: #f4f7f5; font-size: 15px; font-weight: 850; }
+    .brand-count { display: block; margin-top: 4px; color: rgba(255,255,255,.43); font-size: 11px; }
+    .brand-arrow { position: absolute; right: 0; bottom: 1px; color: #4df3a3; font-size: 17px; }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .product {
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: #101211;
+    }
+
+    .product-art {
+      position: relative;
+      display: flex;
+      height: 145px;
+      align-items: end;
+      overflow: hidden;
+      padding: 12px;
+      background:
+        linear-gradient(0deg, rgba(0,0,0,.7), transparent 70%),
+        linear-gradient(140deg, #416257, #182520);
+    }
+
+    .product-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .7; }
+    .brand-pill {
+      position: relative;
+      z-index: 1;
+      padding: 5px 8px;
+      border: 1px solid rgba(0,255,148,.3);
+      border-radius: 6px;
+      background: rgba(4,14,10,.78);
+      color: #71f4b4;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .product-body { padding: 13px; }
+    .product-title { margin: 0; font-size: 14px; font-weight: 800; }
+    .product-game { margin: 5px 0 12px; color: rgba(255,255,255,.45); font-size: 11px; }
+    .product-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .product-price { color: #57efaa; font-size: 14px; font-weight: 850; }
+    .product-more { color: #fff; font-size: 11px; font-weight: 750; }
+
+    .brand-hero {
+      position: relative;
+      display: flex;
+      min-height: 235px;
+      align-items: center;
+      overflow: hidden;
+      padding: 32px 38px;
+      border: 1px solid rgba(0,255,148,.17);
+      border-radius: 20px;
+      background:
+        radial-gradient(ellipse at 82% 50%, rgba(0,255,148,.16), transparent 31%),
+        linear-gradient(115deg, #101714, #0b0e0d 75%);
+    }
+
+    .brand-hero__logo {
+      position: absolute;
+      right: 8%;
+      display: grid;
+      width: 146px;
+      height: 146px;
+      place-items: center;
+      border: 1px solid rgba(0,255,148,.22);
+      border-radius: 30px;
+      background: linear-gradient(145deg, rgba(0,255,148,.12), rgba(0,255,148,.025));
+      color: #59f1aa;
+      font-size: 46px;
+      font-weight: 900;
+      box-shadow: 0 0 70px rgba(0,255,148,.08);
+      transform: rotate(-8deg);
+    }
+
+    .brand-hero__content { position: relative; z-index: 1; max-width: 650px; }
+    .brand-hero__content h1 { margin-top: 8px; }
+    .brand-hero__content p { max-width: 540px; color: rgba(255,255,255,.56); font-size: 14px; line-height: 1.6; }
+    .brand-stats { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 17px; }
+    .brand-stats span {
+      padding: 7px 10px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px;
+      background: rgba(255,255,255,.035);
+      color: #c3d0c9;
+      font-size: 11px;
+    }
+
+    .brand-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .filter-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .filter-chip {
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 999px;
+      background: rgba(255,255,255,.035);
+      color: #b7c3bd;
+      font: inherit;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .filter-chip.is-active { border-color: rgba(0,255,148,.38); background: rgba(0,255,148,.1); color: #61eda9; }
+    .catalog-label { margin: 27px 0 13px; color: #e8f2ec; font-size: 17px; }
+
+    @media (max-width: 900px) {
+      .brand-grid, .product-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .brand-card { min-height: 118px; }
+    }
+
+    @media (max-width: 650px) {
+      .header-inner, .container { width: min(100% - 28px, 560px); }
+      .site-header { height: 62px; }
+      .nav { display: none; }
+      main { padding-top: 20px; }
+      .catalog-hero, .brand-hero { min-height: 205px; padding: 24px; }
+      .hero-mark { right: 3%; font-size: 60px; opacity: .7; }
+      .brand-hero__logo { right: -14px; width: 100px; height: 100px; border-radius: 22px; font-size: 32px; opacity: .72; }
+      .catalog-tools, .brand-toolbar { align-items: stretch; flex-direction: column; }
+      .search { min-height: 44px; }
+      .sort { width: 100%; }
+      .brand-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }
+      .brand-card { min-height: 112px; padding: 13px; }
+      .brand-monogram { width: 31px; height: 31px; }
+      .brand-name { font-size: 13px; }
+      .product-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }
+      .product-art { height: 120px; }
+      .brand-toolbar { margin: 18px 0; }
+    }
+
+    @media (max-width: 370px) {
+      .brand-grid, .product-grid { grid-template-columns: 1fr; }
+      .brand-card { min-height: 102px; }
+      .product-art { height: 160px; }
+      .catalog-hero, .brand-hero { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">MIL<span>LEX</span></div>
+      <nav class="nav"><strong>Каталог</strong><span>Покупка</span><span>Отзывы</span><span>Поддержка</span></nav>
+      <div class="account">Личный кабинет</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-switch" aria-label="Варианты превью">
+      <button class="is-active" data-view="catalog">Каталог и выбор бренда</button>
+      <button data-view="brand">Страница бренда</button>
+    </div>
+
+    <section class="view" id="catalogView">
+      <div class="breadcrumbs">Главная　/　<span>Каталог</span></div>
+      <section class="catalog-hero">
+        <div class="hero-content">
+          <span class="eyebrow">MILLEX · КАТАЛОГ</span>
+          <h1>Найдите свой чит</h1>
+          <p>Выбирайте по игре или сразу перейдите к бренду.</p>
+        </div>
+        <div class="hero-mark">CATALOG</div>
+      </section>
+
+      <div class="catalog-tools">
+        <label class="search">
+          <span aria-hidden="true">⌕</span>
+          <input placeholder="Поиск игр, читов и брендов">
+        </label>
+        <select class="sort" aria-label="Сортировка"><option>Сначала популярные</option><option>Сначала дешевле</option></select>
+      </div>
+
+      <div class="section-heading">
+        <div><h2>Бренды читов</h2><p class="section-subtitle">Отдельные страницы с продуктами каждого бренда</p></div>
+        <a class="all-link" href="#brands">Все бренды →</a>
+      </div>
+
+      <div class="brand-grid" id="brands">
+        <button class="brand-card is-active" data-brand="Ancient">
+          <span class="brand-card__top"><span class="brand-monogram">A</span><span class="brand-name">Ancient</span></span>
+          <span class="brand-card__bottom"><span class="brand-count">6 читов · 4 игры</span><span class="brand-arrow">↗</span></span>
+        </button>
+        <button class="brand-card" data-brand="Weave">
+          <span class="brand-card__top"><span class="brand-monogram">W</span><span class="brand-name">Weave</span></span>
+          <span class="brand-card__bottom"><span class="brand-count">4 чита · 3 игры</span><span class="brand-arrow">↗</span></span>
+        </button>
+        <button class="brand-card" data-brand="Ghost">
+          <span class="brand-card__top"><span class="brand-monogram">G</span><span class="brand-name">Ghost</span></span>
+          <span class="brand-card__bottom"><span class="brand-count">3 чита · 2 игры</span><span class="brand-arrow">↗</span></span>
+        </button>
+        <button class="brand-card" data-brand="Другие">
+          <span class="brand-card__top"><span class="brand-monogram">+</span><span class="brand-name">Другие бренды</span></span>
+          <span class="brand-card__bottom"><span class="brand-count">Смотреть весь список</span><span class="brand-arrow">↗</span></span>
+        </button>
+      </div>
+
+      <div class="section-heading">
+        <div><h2>Игры</h2><p class="section-subtitle">Ищите предложения по конкретной игре</p></div>
+      </div>
+      <div class="product-grid">
+        <article class="product"><div class="product-art"><img src="./frontend/src/static/img/games/cs2.jpg" alt=""><span class="brand-pill">Ancient</span></div><div class="product-body"><h3 class="product-title">Ancient</h3><p class="product-game">CS2 · 6 предложений</p><div class="product-footer"><span class="product-price">от 299 ₽</span><span class="product-more">Перейти →</span></div></div></article>
+        <article class="product"><div class="product-art"><img src="./frontend/src/static/img/games/rust.jpg" alt=""><span class="brand-pill">Weave</span></div><div class="product-body"><h3 class="product-title">RUST</h3><p class="product-game">12 предложений</p><div class="product-footer"><span class="product-price">от 349 ₽</span><span class="product-more">Перейти →</span></div></div></article>
+        <article class="product"><div class="product-art"><img src="./frontend/src/static/img/games/valorant.jpg" alt=""><span class="brand-pill">Ghost</span></div><div class="product-body"><h3 class="product-title">Valorant</h3><p class="product-game">8 предложений</p><div class="product-footer"><span class="product-price">от 199 ₽</span><span class="product-more">Перейти →</span></div></div></article>
+        <article class="product"><div class="product-art"><img src="./frontend/src/static/img/games/escape-from-tarkov.jpg" alt=""><span class="brand-pill">Ancient</span></div><div class="product-body"><h3 class="product-title">Escape from Tarkov</h3><p class="product-game">5 предложений</p><div class="product-footer"><span class="product-price">от 499 ₽</span><span class="product-more">Перейти →</span></div></div></article>
+      </div>
+    </section>
+
+    <section class="view" id="brandView" hidden>
+      <div class="breadcrumbs">Главная　/　Каталог　/　<span>Бренд Ancient</span></div>
+      <section class="brand-hero">
+        <div class="brand-hero__content">
+          <span class="eyebrow">БРЕНД ЧИТОВ</span>
+          <h1>Ancient</h1>
+          <p>Все читы бренда Ancient в одном месте. Сравните игры, функции и тарифы и выберите подходящий продукт.</p>
+          <div class="brand-stats"><span>6 продуктов</span><span>4 игры</span><span>от 299 ₽</span></div>
+        </div>
+        <div class="brand-hero__logo">A</div>
+      </section>
+
+      <div class="brand-toolbar">
+        <div class="filter-chips" aria-label="Фильтр по игре">
+          <button class="filter-chip is-active">Все игры</button>
+          <button class="filter-chip">CS2</button>
+          <button class="filter-chip">RUST</button>
+          <button class="filter-chip">Valorant</button>
+          <button class="filter-chip">Tarkov</button>
+        </div>
+        <select class="sort" aria-label="Сортировка"><option>Сначала популярные</option><option>Сначала дешевле</option></select>
+      </div>
+
+      <h2 class="catalog-label">Читы Ancient <span style="color:#7b8982;font-size:12px;font-weight:400">· 6 предложений</span></h2>
+      <div class="product-grid">
+        <article class="product"><div class="product-art"><img src="./frontend/src/static/img/games/cs2.jpg" alt=""><span class="brand-pill">Ancient · CS2</span></div><div class="product-body"><h3 class="product-title">Ancient Legit</h3><p class="product-game">AIM · VISUALS · 3 тарифа</p><div class="product-footer"><span class="product-price">от 299 ₽</span><span class="product-more">Подробнее →</span></div></div></article>
+        <article class="product"><div class="product-art"><img src="./frontend/src/static/img/games/rust.jpg" alt=""><span class="brand-pill">Ancient · RUST</span></div><div class="product-body"><h3 class="product-title">Ancient Rust</h3><p class="product-game">AIM · ESP · 3 тарифа</p><div class="product-footer"><span class="product-price">от 349 ₽</span><span class="product-more">Подробнее →</span></div></div></article>
+        <article class="product"><div class="product-art"><img src="./frontend/src/static/img/games/valorant.jpg" alt=""><span class="brand-pill">Ancient · Valorant</span></div><div class="product-body"><h3 class="product-title">Ancient V</h3><p class="product-game">AIM · CONFIG · 2 тарифа</p><div class="product-footer"><span class="product-price">от 399 ₽</span><span class="product-more">Подробнее →</span></div></div></article>
+        <article class="product"><div class="product-art"><img src="./frontend/src/static/img/games/escape-from-tarkov.jpg" alt=""><span class="brand-pill">Ancient · Tarkov</span></div><div class="product-body"><h3 class="product-title">Ancient EFT</h3><p class="product-game">ESP · MISC · 3 тарифа</p><div class="product-footer"><span class="product-price">от 499 ₽</span><span class="product-more">Подробнее →</span></div></div></article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const catalogView = document.querySelector("#catalogView");
+    const brandView = document.querySelector("#brandView");
+    const switches = [...document.querySelectorAll(".page-switch button")];
+
+    function showView(name) {
+      const isBrand = name === "brand";
+      catalogView.hidden = isBrand;
+      brandView.hidden = !isBrand;
+      switches.forEach((button) => button.classList.toggle("is-active", button.dataset.view === name));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    switches.forEach((button) => button.addEventListener("click", () => showView(button.dataset.view)));
+    document.querySelectorAll(".brand-card").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".brand-card").forEach((card) => card.classList.remove("is-active"));
+        button.classList.add("is-active");
+        showView("brand");
+      });
+    });
+    document.querySelectorAll(".filter-chip").forEach((button) => {
+      button.addEventListener("click", () => {
+        button.parentElement.querySelectorAll(".filter-chip").forEach((chip) => chip.classList.remove("is-active"));
+        button.classList.add("is-active");
+      });
+    });
+  </script>
+</body>
+</html>

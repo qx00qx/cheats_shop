@@ -9,19 +9,21 @@ import AdminEmailer from "./AdminEmailer";
 import AdminHomepage from "./AdminHomepage";
 import AdminArticles from "./AdminArticles";
 import AdminAccounting from "./AdminAccounting";
+import AdminSeo from "./AdminSeo";
 
 export default function AdminLayout() {
   const navigation = [
-    { to: "/admin", label: "Дашборд", end: true },
-    { to: "/admin/games", label: "Игры" },
-    { to: "/admin/products", label: "Читы и товары" },
-    { to: "/admin/orders", label: "Заказы" },
-    { to: "/admin/users", label: "Пользователи" },
-    { to: "/admin/payouts", label: "Выплаты" },
-    { to: "/admin/accounting", label: "Бухгалтерия" },
-    { to: "/admin/emailer", label: "Рассылки" },
-    { to: "/admin/homepage", label: "Настройка главной" },
-    { to: "/admin/articles", label: "Статьи" },
+    { to: "/asdnrwe", label: "Дашборд", end: true },
+    { to: "/asdnrwe/games", label: "Игры" },
+    { to: "/asdnrwe/products", label: "Читы и товары" },
+    { to: "/asdnrwe/orders", label: "Заказы" },
+    { to: "/asdnrwe/users", label: "Пользователи" },
+    { to: "/asdnrwe/payouts", label: "Выплаты" },
+    { to: "/asdnrwe/accounting", label: "Бухгалтерия" },
+    { to: "/asdnrwe/emailer", label: "Рассылки" },
+    { to: "/asdnrwe/homepage", label: "Настройка главной" },
+    { to: "/asdnrwe/articles", label: "Статьи" },
+    { to: "/asdnrwe/seo", label: "SEO" },
   ];
 
   return (
@@ -59,6 +61,7 @@ export default function AdminLayout() {
             <Route path="emailer" element={<AdminEmailer />} />
             <Route path="homepage" element={<AdminHomepage />} />
             <Route path="articles" element={<AdminArticles />} />
+            <Route path="seo" element={<AdminSeo />} />
           </Routes>
         </section>
       </div>

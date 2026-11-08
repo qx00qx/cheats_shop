@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Предпросмотр — игра в карточках похожих читов</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 40px;
+      background: #070908;
+      color: #f5f7f6;
+      font-family: Arial, sans-serif;
+    }
+
+    .similar-cheats {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 26px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 22px;
+      background:
+        radial-gradient(ellipse at top left, rgba(0, 255, 148, .055), transparent 44%),
+        linear-gradient(145deg, rgba(14, 16, 15, .96), rgba(7, 8, 8, .98));
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      color: #48e9a1;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 6px 0 5px;
+      font-size: 24px;
+    }
+
+    .description {
+      margin: 0;
+      color: rgba(255, 255, 255, .52);
+      font-size: 13px;
+    }
+
+    .arrows { display: flex; gap: 12px; }
+    .arrows button {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .045);
+      color: white;
+      font-size: 22px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, .025);
+    }
+
+    .cover {
+      position: relative;
+      height: 158px;
+      overflow: hidden;
+      background:
+        linear-gradient(140deg, transparent 38%, rgba(0, 0, 0, .7)),
+        repeating-linear-gradient(165deg, transparent 0 18px, rgba(255, 255, 255, .035) 19px 20px),
+        linear-gradient(125deg, #555c50, #24352e 50%, #101715);
+    }
+
+    .cover::before {
+      position: absolute;
+      right: 12%;
+      bottom: 0;
+      width: 33%;
+      height: 83%;
+      content: "";
+      background: linear-gradient(90deg, #111, #343a35 48%, #101211);
+      clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
+      opacity: .8;
+    }
+
+    .cover--second {
+      background:
+        linear-gradient(140deg, transparent 30%, rgba(0, 0, 0, .62)),
+        linear-gradient(175deg, #b6d5e0 0 38%, #3b4b45 39% 57%, #17201c 58%);
+    }
+
+    .cover--second::before {
+      right: 23%;
+      width: 28%;
+      height: 46%;
+      background: linear-gradient(90deg, #101311, #51564e 50%, #111);
+    }
+
+    .cover--third {
+      background:
+        radial-gradient(ellipse at 70% 22%, #67b4d2 0 18%, transparent 19%),
+        linear-gradient(150deg, #526a75, #202f32 52%, #111716);
+    }
+
+    .cover--third::before {
+      right: 11%;
+      width: 42%;
+      height: 73%;
+      background: linear-gradient(90deg, #17201c, #66716a 50%, #171d1a);
+    }
+
+    .match {
+      position: absolute;
+      right: 9px;
+      bottom: 8px;
+      padding: 5px 8px;
+      border: 1px solid rgba(0, 255, 148, .25);
+      border-radius: 999px;
+      background: rgba(4, 15, 10, .9);
+      color: #61f3af;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .card-body { padding: 12px; }
+    .name-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 9px;
+    }
+
+    .name {
+      min-width: 0;
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+    }
+    .features { display: flex; flex-wrap: wrap; gap: 6px; }
+    .features span {
+      padding: 4px 7px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .055);
+      color: rgba(255, 255, 255, .65);
+      font-size: 10px;
+    }
+
+    .game-title {
+      flex: 0 0 auto;
+      max-width: 100%;
+      overflow: hidden;
+      padding: 5px 8px;
+      border: 1px solid rgba(0, 255, 148, .28);
+      border-radius: 6px;
+      background: rgba(5, 24, 16, .86);
+      color: #61f3af;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.2;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, .06);
+      color: rgba(255, 255, 255, .56);
+      font-size: 11px;
+    }
+
+    .price strong { color: #4cf0a7; font-size: 15px; }
+    .more { color: #fff; font-weight: 800; }
+    .more b { color: #4cf0a7; font-size: 18px; vertical-align: -1px; }
+
+    .same-brand {
+      max-width: 1180px;
+      margin: 18px auto 0;
+      padding: 26px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 22px;
+      background:
+        radial-gradient(ellipse at top left, rgba(0, 255, 148, .04), transparent 44%),
+        linear-gradient(145deg, rgba(14, 16, 15, .96), rgba(7, 8, 8, .98));
+    }
+
+    .brand-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 5px;
+      color: #48e9a1;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .brand-label::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #48e9a1;
+      box-shadow: 0 0 10px rgba(72, 233, 161, .7);
+      content: "";
+    }
+
+    .brand-game {
+      flex: 0 0 auto;
+      padding: 5px 8px;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .04);
+      color: rgba(255, 255, 255, .76);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 700px) {
+      body { padding: 18px 12px; }
+      .similar-cheats, .same-brand { padding: 17px; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .cover { height: auto; aspect-ratio: 16 / 9; }
+      h1 { font-size: 20px; }
+      .arrows { gap: 8px; }
+      .arrows button { width: 34px; height: 34px; }
+    }
+
+    @media (max-width: 480px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="similar-cheats">
+    <header class="section-heading">
+      <div>
+        <span class="eyebrow">По совпадающим функциям</span>
+        <h1>Похожие читы</h1>
+        <p class="description">Подобраны по общим функциям, в том числе для других игр</p>
+      </div>
+      <div class="arrows" aria-hidden="true"><button>‹</button><button>›</button></div>
+    </header>
+
+    <div class="cards">
+      <article class="card">
+        <div class="cover">
+          <span class="match">3 общие функции</span>
+        </div>
+        <div class="card-body">
+          <div class="name-row">
+            <h2 class="name">SMG</h2>
+            <span class="game-title">Чит на CS2</span>
+          </div>
+          <div class="features"><span>Enable</span><span>Smooth</span><span>World</span></div>
+          <div class="footer"><span class="price">От <strong>299 ₽</strong></span><span class="more">Подробнее <b>›</b></span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="cover cover--second">
+          <span class="match">2 общие функции</span>
+        </div>
+        <div class="card-body">
+          <div class="name-row">
+            <h2 class="name">Ancient</h2>
+            <span class="game-title">Чит на RUST</span>
+          </div>
+          <div class="features"><span>FOV</span><span>Smooth</span></div>
+          <div class="footer"><span class="price">От <strong>349 ₽</strong></span><span class="more">Подробнее <b>›</b></span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="cover cover--third">
+          <span class="match">2 общие функции</span>
+        </div>
+        <div class="card-body">
+          <div class="name-row">
+            <h2 class="name">Ghost</h2>
+            <span class="game-title">Чит на Valorant</span>
+          </div>
+          <div class="features"><span>Enable</span><span>Smooth</span></div>
+          <div class="footer"><span class="price">От <strong>199 ₽</strong></span><span class="more">Подробнее <b>›</b></span></div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <section class="same-brand" aria-labelledby="same-brand-title">
+    <header class="section-heading">
+      <div>
+        <span class="brand-label">Бренд MILLEX</span>
+        <h1 id="same-brand-title">Читы того же бренда</h1>
+        <p class="description">Другие продукты MILLEX для разных игр</p>
+      </div>
+      <div class="arrows" aria-hidden="true"><button>‹</button><button>›</button></div>
+    </header>
+
+    <div class="cards">
+      <article class="card">
+        <div class="cover cover--third"></div>
+        <div class="card-body">
+          <div class="name-row">
+            <h2 class="name">WEAVE</h2>
+            <span class="brand-game">CS2</span>
+          </div>
+          <div class="features"><span>AIMBOT</span><span>CONFIG</span><span>WORLD</span></div>
+          <div class="footer"><span class="price">От <strong>481 ₽</strong></span><span class="more">Подробнее <b>›</b></span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="cover cover--second"></div>
+        <div class="card-body">
+          <div class="name-row">
+            <h2 class="name">SMG</h2>
+            <span class="brand-game">RUST</span>
+          </div>
+          <div class="features"><span>ENABLE</span><span>SMOOTH</span><span>WORLD</span></div>
+          <div class="footer"><span class="price">От <strong>349 ₽</strong></span><span class="more">Подробнее <b>›</b></span></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="cover"></div>
+        <div class="card-body">
+          <div class="name-row">
+            <h2 class="name">AIMBOT PRO</h2>
+            <span class="brand-game">Valorant</span>
+          </div>
+          <div class="features"><span>AIMBOT</span><span>FOV</span><span>SMOOTH</span></div>
+          <div class="footer"><span class="price">От <strong>299 ₽</strong></span><span class="more">Подробнее <b>›</b></span></div>
+        </div>
+      </article>
+    </div>
+  </section>
+</body>
+</html>

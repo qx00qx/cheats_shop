@@ -11,6 +11,33 @@ class SettingsTests(unittest.TestCase):
             settings = load_settings()
 
         self.assertEqual(settings.mini_app_url, "https://millex.market")
+        self.assertEqual(settings.telegram_proxy_url, "")
+
+    def test_loads_http_telegram_proxy_url(self) -> None:
+        env = {
+            "BOT_TOKEN": "test-token",
+            "TELEGRAM_PROXY_URL": "http://proxy.example:8080",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            settings = load_settings()
+
+        self.assertEqual(settings.telegram_proxy_url, env["TELEGRAM_PROXY_URL"])
+
+    def test_loads_socks5_telegram_proxy_url(self) -> None:
+        env = {
+            "BOT_TOKEN": "test-token",
+            "TELEGRAM_PROXY_URL": "socks5://proxy.example:1080",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            settings = load_settings()
+
+        self.assertEqual(settings.telegram_proxy_url, env["TELEGRAM_PROXY_URL"])
+
+    def test_rejects_unsupported_telegram_proxy_scheme(self) -> None:
+        env = {"BOT_TOKEN": "test-token", "TELEGRAM_PROXY_URL": "ftp://proxy"}
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaisesRegex(ValueError, "HTTP\\(S\\) or SOCKS5"):
+                load_settings()
 
     def test_requires_bot_token(self) -> None:
         with patch.dict(os.environ, {}, clear=True):

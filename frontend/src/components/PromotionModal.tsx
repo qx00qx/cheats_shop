@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getCheatPromotion } from "../api/catalog";
 import { type CheatPromotion } from "../utils/cheatPromotion";
 
-const DISMISSED_KEY = "millex_11_percent_promotion_dismissed";
+const DISMISSED_KEY = "millex_15_percent_global_promotion_dismissed";
 
 export default function PromotionModal() {
   const [promotion, setPromotion] = useState<CheatPromotion | null>(null);
@@ -12,11 +13,7 @@ export default function PromotionModal() {
     if (localStorage.getItem(DISMISSED_KEY) === "true") return;
 
     let active = true;
-    fetch("/api/catalog/promotion")
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json() as Promise<CheatPromotion>;
-      })
+    getCheatPromotion()
       .then((result) => {
         if (!active) return;
         setPromotion(result);
@@ -81,14 +78,15 @@ export default function PromotionModal() {
         <div className="home-promo-value">−{promotion.discount_percent}%</div>
         <h2 id="home-promo-title">Скидка для ВСЕХ {promotion.discount_percent}%</h2>
         <p>
-          Скидка действует на все читы. Личная накопительная скидка не сгорает и продолжает
-          расти, но не складывается с акцией — она будет применяться после её окончания.
+          Скидка действует на все товары, включая аккаунты. Личная накопительная скидка не
+          сгорает и продолжает расти, но не складывается с акцией — она будет применяться
+          после её окончания.
         </p>
         <span className="home-promo-until">
           До {new Date(promotion.ends_at).toLocaleDateString("ru-RU")}
         </span>
         <Link to="/catalog" className="home-promo-action" onClick={dismiss}>
-          Выбрать чит
+          Выбрать товар
         </Link>
       </section>
     </div>

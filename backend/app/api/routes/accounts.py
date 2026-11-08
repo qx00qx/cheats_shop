@@ -15,6 +15,14 @@ from app.database import get_db
 from app.models import BalanceAudit, BotOrder, User
 from app.services.nfa import NfaConfigurationError, nfa
 from app.services.user_discount import increase_user_discount
+from app.services.cheat_promotion import (
+    discounted_cheat_price,
+    effective_cheat_discount_percent,
+    get_promotion_start,
+    promotion_window,
+    CHEAT_PROMOTION_DISCOUNT_PERCENT,
+    is_cheat_promotion_active,
+)
 
 router = APIRouter(prefix="/api/accounts", tags=["accounts"])
 
@@ -75,6 +83,19 @@ def _catalog_item(row: Any) -> dict[str, Any]:
     }
 
 
+def _account_promotion_fields(db: Session) -> dict[str, Any]:
+    starts_at = get_promotion_start(db)
+    _, ends_at = promotion_window(starts_at)
+    return {
+        "promo_discount_percent": (
+            CHEAT_PROMOTION_DISCOUNT_PERCENT
+            if is_cheat_promotion_active(starts_at)
+            else 0
+        ),
+        "promo_expires_at": ends_at.isoformat(),
+    }
+
+
 @router.get("/purchases/{order_id}/download")
 def download_account_purchase(
     order_id: int,
@@ -127,7 +148,11 @@ def get_accounts(
         FROM accounts
         WHERE COALESCE(vis, 1) = 1
     """)).mappings().all()
-    accounts = [_catalog_item(row) for row in rows]
+    promotion_fields = _account_promotion_fields(db)
+    accounts = [
+        {**_catalog_item(row), **promotion_fields}
+        for row in rows
+    ]
 
     if game:
         game_filter = game.strip().lower()
@@ -192,12 +217,14 @@ async def purchase_account(
     if not locked_user:
         raise HTTPException(401, "Пользователь не найден")
 
-    discount_percent = min(10, max(0, int(locked_user.discount_percent or 0)))
-    price = (
-        Decimal(str(account_row["price"] or 0))
-        * Decimal(100 - discount_percent)
-        / Decimal(100)
-    ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    discount_percent = effective_cheat_discount_percent(
+        locked_user.discount_percent,
+        starts_at=get_promotion_start(db),
+    )
+    price = discounted_cheat_price(
+        Decimal(str(account_row["price"] or 0)),
+        discount_percent,
+    )
     old_balance = Decimal(str(locked_user.balance or 0))
     if price <= 0:
         raise HTTPException(409, "Некорректная цена аккаунта")

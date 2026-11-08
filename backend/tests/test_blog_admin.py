@@ -33,7 +33,14 @@ def test_admin_can_create_and_edit_blog_articles():
     try:
         created = client.post(
             "/api/blog/admin/articles",
-            json={"name": "Новая статья", "text": "<h2>Заголовок</h2><p>Текст статьи</p>"},
+            json={
+                "name": "Новая статья",
+                "text": "<h2>Заголовок</h2><p>Текст статьи</p>",
+                "seo_title": "Индивидуальный заголовок",
+                "seo_description": "Индивидуальное описание",
+                "seo_image": "/uploads/article.jpg",
+                "seo_noindex": True,
+            },
         )
 
         assert created.status_code == 201
@@ -41,18 +48,35 @@ def test_admin_can_create_and_edit_blog_articles():
         assert article["alias"] == "novaya-statya"
         assert article["name"] == "Новая статья"
         assert article["vis"] == 1
+        assert article["seo_title"] == "Индивидуальный заголовок"
+        assert article["seo_description"] == "Индивидуальное описание"
+        assert article["seo_image"] == "/uploads/article.jpg"
+        assert article["seo_noindex"] is True
 
         updated = client.put(
             f"/api/blog/admin/articles/{article['id']}",
-            json={"name": "Обновлённая статья", "text": "<p>Новый текст</p>"},
+            json={
+                "name": "Обновлённая статья",
+                "text": "<p>Новый текст</p>",
+                "seo_title": "Новое SEO",
+                "seo_description": "Новое описание",
+                "seo_image": "https://millex.market/uploads/new-article.jpg",
+                "seo_noindex": False,
+            },
         )
         assert updated.status_code == 200
         assert updated.json()["alias"] == "novaya-statya"
         assert updated.json()["name"] == "Обновлённая статья"
+        assert updated.json()["seo_title"] == "Новое SEO"
+        assert updated.json()["seo_image"] == "https://millex.market/uploads/new-article.jpg"
+        assert updated.json()["seo_noindex"] is False
 
         public_article = client.get(f"/api/blog/{article['alias']}")
         assert public_article.status_code == 200
         assert public_article.json()["content"] == "<p>Новый текст</p>"
+        assert public_article.json()["seo_title"] == "Новое SEO"
+        assert public_article.json()["seo_image"] == "https://millex.market/uploads/new-article.jpg"
+        assert public_article.json()["seo_noindex"] is False
 
         hidden = client.put(
             f"/api/blog/admin/articles/{article['id']}",

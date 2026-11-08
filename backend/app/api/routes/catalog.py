@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
-from sqlalchemy import func, inspect, text
+from sqlalchemy import bindparam, func, inspect, text
 
 from app.database import get_db
 from app.api.deps import get_current_admin
@@ -33,6 +33,18 @@ def _mask_purchase_email(email: str) -> str:
         return ""
     top_level_domain = domain.rsplit(".", 1)[-1]
     return f"{local[:2]}****@.{top_level_domain}"
+
+
+def _validate_seo_image(value: str | None) -> str | None:
+    if value is None or not value.strip():
+        return None
+    normalized = value.strip()
+    if normalized.startswith("/") and not normalized.startswith("//"):
+        return normalized
+    parsed = urlsplit(normalized)
+    if parsed.scheme in {"http", "https"} and parsed.netloc:
+        return normalized
+    raise ValueError("Укажите HTTP(S)-ссылку или путь к изображению на сайте")
 
 
 class LegacyTariffInput(BaseModel):
@@ -70,6 +82,10 @@ class CheatFeatureCategoryInput(BaseModel):
 class LegacyItemCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=1000)
     alias: str = Field(..., min_length=1, max_length=255, pattern=r"^[a-z0-9_-]+$")
+    seo_title: str | None = Field(default=None, max_length=255)
+    seo_description: str | None = Field(default=None, max_length=500)
+    seo_image: str | None = Field(default=None, max_length=2000)
+    seo_noindex: bool = False
     game_id: int = Field(..., gt=0)
     systems: str | None = Field(default=None, max_length=1000)
     text: str | None = None
@@ -150,13 +166,27 @@ class LegacyItemCreate(BaseModel):
             raise ValueError("Укажите адрес статьи блога в формате /blog/alias")
         return f"/blog/{match.group(1)}"
 
+    @field_validator("seo_image")
+    @classmethod
+    def validate_seo_image(cls, value: str | None) -> str | None:
+        return _validate_seo_image(value)
+
 
 class AdminGameInput(BaseModel):
     title: str = Field(..., min_length=1, max_length=255)
     slug: str = Field(..., min_length=1, max_length=255, pattern=r"^[a-z0-9_-]+$")
+    seo_title: str | None = Field(default=None, max_length=255)
+    seo_description: str | None = Field(default=None, max_length=500)
+    seo_image: str | None = Field(default=None, max_length=2000)
+    seo_noindex: bool = False
     cover_url: str | None = Field(default=None, max_length=2000)
     sort_order: int = Field(default=999, ge=0)
     is_active: bool = True
+
+    @field_validator("seo_image")
+    @classmethod
+    def validate_seo_image(cls, value: str | None) -> str | None:
+        return _validate_seo_image(value)
 
 
 class ItemVisibilityInput(BaseModel):
@@ -221,6 +251,31 @@ def _feature_assignments_by_item(db: Session, item_ids: list[int]) -> dict[int, 
             ],
         })
     return assignments
+
+
+def _shared_feature_names(
+    current_categories: list[dict],
+    candidate_categories: list[dict],
+) -> list[str]:
+    candidate_features = {
+        category["category_id"]: {
+            " ".join(feature.strip().lower().split())
+            for feature in category["features"]
+            if feature.strip()
+        }
+        for category in candidate_categories
+    }
+
+    shared: dict[str, str] = {}
+    for category in current_categories:
+        candidate = candidate_features.get(category["category_id"])
+        if not candidate:
+            continue
+        for feature in category["features"]:
+            normalized = " ".join(feature.strip().lower().split())
+            if normalized and normalized in candidate:
+                shared.setdefault(normalized, feature.strip())
+    return list(shared.values())
 
 
 def _save_feature_assignments(
@@ -312,6 +367,10 @@ def get_games(db: Session = Depends(get_db)):
             c.name AS title,
             c.alias AS slug,
             c.images_characters AS image,
+            c.seo_title,
+            c.seo_description,
+            c.seo_image,
+            c.seo_noindex,
             COUNT(i.id)::integer AS product_count,
             COALESCE(MIN(i.price), 0) AS min_price
         FROM categories c
@@ -320,11 +379,12 @@ def get_games(db: Session = Depends(get_db)):
          AND i.status = 1
          AND COALESCE(i.vis, 1) = 1
         WHERE c.vis = 1 AND c.parent = 0
-        GROUP BY c.id, c.name, c.alias, c.images_characters, c.posled
+        GROUP BY c.id, c.name, c.alias, c.images_characters, c.seo_title,
+                 c.seo_description, c.seo_image, c.seo_noindex, c.posled
         ORDER BY c.posled, c.id
     """)).mappings().all()
 
-    promotion_fields = cheat_promotion_public_fields()
+    promotion_fields = cheat_promotion_public_fields(db)
     return [{**dict(row), **promotion_fields} for row in rows]
 
 
@@ -371,8 +431,8 @@ def search_catalog(
 
 
 @router.get("/promotion")
-def get_promotion():
-    return cheat_promotion_payload()
+def get_promotion(db: Session = Depends(get_db)):
+    return cheat_promotion_payload(db)
 
 
 @router.get("/recent-purchases")
@@ -457,7 +517,8 @@ def get_cheat_statuses(db: Session = Depends(get_db)):
 @router.get("/games/{slug}")
 def get_game_items(slug: str, db: Session = Depends(get_db)):
     game = db.execute(text("""
-        SELECT id, name AS title, alias AS slug, images_characters AS image
+        SELECT id, name AS title, alias AS slug, images_characters AS image,
+               seo_title, seo_description, seo_image, seo_noindex
         FROM categories
         WHERE alias = :slug AND vis = 1
         LIMIT 1
@@ -471,6 +532,10 @@ def get_game_items(slug: str, db: Session = Depends(get_db)):
             id,
             name,
             alias,
+            seo_title,
+            seo_description,
+            seo_image,
+            seo_noindex,
             text,
             tabs,
             status,
@@ -534,7 +599,7 @@ def get_game_items(slug: str, db: Session = Depends(get_db)):
         )
         public_items.append({
             **dict(item),
-            **cheat_promotion_public_fields(),
+            **cheat_promotion_public_fields(db),
             "gallery": gallery,
             "image": first_image,
             "feature_categories": feature_categories.get(item["id"], []),
@@ -550,19 +615,100 @@ def get_game_items(slug: str, db: Session = Depends(get_db)):
     }
 
 
-@router.get("/similar-items")
-def get_similar_items(db: Session = Depends(get_db)):
-    rows = db.execute(text("""
-        SELECT id, name, alias, price, preview, video, gallery
+@router.get("/similar-items/{alias}")
+def get_similar_items(alias: str, db: Session = Depends(get_db)):
+    current_item_id = db.execute(text("""
+        SELECT id
         FROM items
-        WHERE status = 1 AND COALESCE(vis, 1) = 1
-        ORDER BY id DESC
-    """)).mappings().all()
-    feature_categories = _feature_assignments_by_item(
-        db,
-        [item["id"] for item in rows],
+        WHERE alias = :alias
+          AND status = 1
+          AND COALESCE(vis, 1) = 1
+        LIMIT 1
+    """), {"alias": alias}).scalar()
+    if current_item_id is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    current_categories = _feature_assignments_by_item(db, [current_item_id]).get(
+        current_item_id,
+        [],
     )
-    promotion_fields = cheat_promotion_public_fields()
+    category_ids = [category["category_id"] for category in current_categories]
+    matches = []
+    if category_ids:
+        candidate_item_ids = [
+            row[0]
+            for row in db.query(CheatFeatureAssignment.item_id)
+            .filter(
+                CheatFeatureAssignment.category_id.in_(category_ids),
+                CheatFeatureAssignment.item_id != current_item_id,
+            )
+            .distinct()
+            .all()
+        ]
+        if candidate_item_ids:
+            active_candidates_query = text("""
+                SELECT id, name
+                FROM items
+                WHERE id IN :item_ids
+                  AND status = 1
+                  AND COALESCE(vis, 1) = 1
+            """).bindparams(bindparam("item_ids", expanding=True))
+            active_candidates = db.execute(
+                active_candidates_query,
+                {"item_ids": candidate_item_ids},
+            ).mappings().all()
+            active_candidate_ids = [row["id"] for row in active_candidates]
+            feature_categories = _feature_assignments_by_item(
+                db,
+                active_candidate_ids,
+            )
+            candidate_names = {row["id"]: row["name"] for row in active_candidates}
+            shared_features_by_id = {}
+            for candidate_id in active_candidate_ids:
+                shared_features = _shared_feature_names(
+                    current_categories,
+                    feature_categories.get(candidate_id, []),
+                )
+                if shared_features:
+                    shared_features_by_id[candidate_id] = shared_features
+            matches = sorted(
+                shared_features_by_id,
+                key=lambda candidate_id: (
+                    -len(shared_features_by_id[candidate_id]),
+                    candidate_names[candidate_id].casefold(),
+                ),
+            )[:12]
+
+    if matches:
+        matched_items_query = text("""
+            SELECT id, name, alias, price, preview, video, gallery
+            FROM items
+            WHERE id IN :item_ids
+        """).bindparams(bindparam("item_ids", expanding=True))
+        item_rows = db.execute(
+            matched_items_query,
+            {"item_ids": matches},
+        ).mappings().all()
+        rows_by_id = {row["id"]: dict(row) for row in item_rows}
+        rows = [
+            {
+                **rows_by_id[candidate_id],
+                "shared_features": shared_features_by_id[candidate_id],
+            }
+            for candidate_id in matches
+        ]
+    else:
+        rows = db.execute(text("""
+            SELECT id, name, alias, price, preview, video, gallery
+            FROM items
+            WHERE alias != :alias
+              AND status = 1
+              AND COALESCE(vis, 1) = 1
+            ORDER BY id DESC
+            LIMIT 12
+        """), {"alias": alias}).mappings().all()
+
+    promotion_fields = cheat_promotion_public_fields(db)
 
     public_items = []
     for row in rows:
@@ -581,7 +727,7 @@ def get_similar_items(db: Session = Depends(get_db)):
         item.pop("preview", None)
         item.pop("video", None)
         item.update(promotion_fields)
-        item["feature_categories"] = feature_categories.get(item["id"], [])
+        item.setdefault("shared_features", [])
         public_items.append(item)
 
     return {"items": public_items}
@@ -615,6 +761,7 @@ def get_home_items(db: Session = Depends(get_db)):
         db,
         [row["id"] for row in rows],
     )
+    promotion_fields = cheat_promotion_public_fields(db)
     items = []
     for row in rows:
         item = dict(row)
@@ -628,7 +775,7 @@ def get_home_items(db: Session = Depends(get_db)):
             None,
         )
         item["feature_categories"] = assignments.get(item["id"], [])
-        item.update(cheat_promotion_public_fields())
+        item.update(promotion_fields)
         items.append(item)
     return items
 
@@ -683,6 +830,10 @@ def get_item(alias: str, db: Session = Depends(get_db)):
             id,
             name,
             alias,
+            seo_title,
+            seo_description,
+            seo_image,
+            seo_noindex,
             text,
             tabs,
             systems,
@@ -730,7 +881,7 @@ def get_item(alias: str, db: Session = Depends(get_db)):
         item["game_alias"] = None
         item["game_title"] = None
     item["tariffs"] = parse_legacy_tariffs(item["tabs"], item.pop("prices"))
-    item.update(cheat_promotion_public_fields())
+    item.update(cheat_promotion_public_fields(db))
     item["feature_categories"] = _feature_assignments_by_item(db, [item["id"]]).get(
         item["id"],
         [],
@@ -740,7 +891,8 @@ def get_item(alias: str, db: Session = Depends(get_db)):
 @router.get("/categories")
 def list_categories(db: Session = Depends(get_db)):
     rows = db.execute(text("""
-        SELECT id, alias AS slug, name AS title
+        SELECT id, alias AS slug, name AS title,
+               seo_title, seo_description
         FROM categories
         WHERE vis = 1 AND parent = 0
         ORDER BY posled, id
@@ -756,7 +908,11 @@ def list_admin_games(
     rows = db.execute(text("""
         SELECT id, COALESCE(name, '') AS title, COALESCE(alias, '') AS slug,
                images_characters AS cover_url, COALESCE(posled, 999) AS sort_order,
-               COALESCE(vis, 0) = 1 AS is_active
+               COALESCE(vis, 0) = 1 AS is_active,
+               COALESCE(seo_title, '') AS seo_title,
+               COALESCE(seo_description, '') AS seo_description,
+               COALESCE(seo_image, '') AS seo_image,
+               COALESCE(seo_noindex, FALSE) AS seo_noindex
         FROM categories
         WHERE parent = 0
         ORDER BY posled, id
@@ -797,10 +953,20 @@ def create_admin_game(
         raise HTTPException(409, "Game slug already exists")
 
     row = db.execute(text("""
-        INSERT INTO categories (name, alias, images_characters, parent, vis, posled)
-        VALUES (:title, :slug, :cover_url, 0, :is_active, :sort_order)
+        INSERT INTO categories (
+            name, alias, images_characters, parent, vis, posled,
+            seo_title, seo_description, seo_image, seo_noindex
+        )
+        VALUES (
+            :title, :slug, :cover_url, 0, :is_active, :sort_order,
+            :seo_title, :seo_description, :seo_image, :seo_noindex
+        )
         RETURNING id, name AS title, alias AS slug, images_characters AS cover_url,
-                  posled AS sort_order, (vis = 1) AS is_active
+                  posled AS sort_order, (vis = 1) AS is_active,
+                  COALESCE(seo_title, '') AS seo_title,
+                  COALESCE(seo_description, '') AS seo_description,
+                  COALESCE(seo_image, '') AS seo_image,
+                  COALESCE(seo_noindex, FALSE) AS seo_noindex
     """), {
         **payload.model_dump(),
         "is_active": int(payload.is_active),
@@ -832,10 +998,18 @@ def update_admin_game(
             alias = :slug,
             images_characters = :cover_url,
             posled = :sort_order,
-            vis = :is_active
+            vis = :is_active,
+            seo_title = :seo_title,
+            seo_description = :seo_description,
+            seo_image = :seo_image,
+            seo_noindex = :seo_noindex
         WHERE id = :game_id AND parent = 0
         RETURNING id, name AS title, alias AS slug, images_characters AS cover_url,
-                  posled AS sort_order, (vis = 1) AS is_active
+                  posled AS sort_order, (vis = 1) AS is_active,
+                  COALESCE(seo_title, '') AS seo_title,
+                  COALESCE(seo_description, '') AS seo_description,
+                  COALESCE(seo_image, '') AS seo_image,
+                  COALESCE(seo_noindex, FALSE) AS seo_noindex
     """), {
         **payload.model_dump(),
         "is_active": int(payload.is_active),
@@ -857,6 +1031,10 @@ def list_admin_items(
     rows = db.execute(text("""
         SELECT
             i.id, COALESCE(i.name, '') AS name, COALESCE(i.alias, '') AS alias,
+            COALESCE(i.seo_title, '') AS seo_title,
+            COALESCE(i.seo_description, '') AS seo_description,
+            COALESCE(i.seo_image, '') AS seo_image,
+            COALESCE(i.seo_noindex, FALSE) AS seo_noindex,
             COALESCE(i.systems, '') AS systems, COALESCE(i.text, '') AS text,
             COALESCE(i.instruction, '') AS instruction,
             COALESCE(i.instruction_link, '') AS instruction_link,
@@ -1030,7 +1208,9 @@ def update_admin_item(
             loot_title = :loot_title, loot = :loot, loot_desc = :loot_desc,
             loot_en_title = :loot_en_title, loot_en_desc = :loot_en_desc,
             visuals_title = :visuals_title, visuals = :visuals, visuals_desc = :visuals_desc,
-            visuals_en_title = :visuals_en_title, visuals_en_desc = :visuals_en_desc
+            visuals_en_title = :visuals_en_title, visuals_en_desc = :visuals_en_desc,
+            seo_title = :seo_title, seo_description = :seo_description,
+            seo_image = :seo_image, seo_noindex = :seo_noindex
         WHERE id = :item_id
         RETURNING id, name, alias, status, vis
     """), values).mappings().first()
@@ -1086,7 +1266,8 @@ def create_legacy_item(
             home, top, hit, undetected, security_status, win10, win11, amd, intel,
             esp_title, esp, esp_desc, aimbot_title, aimbot, aimbot_desc,
             misc_title, misc, misc_desc, loot_title, loot, loot_desc,
-            visuals_title, visuals, visuals_desc,
+            visuals_title, visuals, visuals_desc, seo_title, seo_description,
+            seo_image, seo_noindex,
             esp_en_title, esp_en_desc, aimbot_en_title, aimbot_en_desc,
             misc_en_title, misc_en_desc, loot_en_title, loot_en_desc,
             visuals_en_title, visuals_en_desc
@@ -1098,7 +1279,8 @@ def create_legacy_item(
             :home, :top, :hit, :undetected, :security_status, :win10, :win11, :amd, :intel,
             :esp_title, :esp, :esp_desc, :aimbot_title, :aimbot, :aimbot_desc,
             :misc_title, :misc, :misc_desc, :loot_title, :loot, :loot_desc,
-            :visuals_title, :visuals, :visuals_desc,
+            :visuals_title, :visuals, :visuals_desc, :seo_title, :seo_description,
+            :seo_image, :seo_noindex,
             :esp_en_title, :esp_en_desc, :aimbot_en_title, :aimbot_en_desc,
             :misc_en_title, :misc_en_desc, :loot_en_title, :loot_en_desc,
             :visuals_en_title, :visuals_en_desc
@@ -1108,6 +1290,10 @@ def create_legacy_item(
         "category_data": category_data,
         "name": payload.name,
         "alias": payload.alias,
+        "seo_title": payload.seo_title,
+        "seo_description": payload.seo_description,
+        "seo_image": payload.seo_image,
+        "seo_noindex": payload.seo_noindex,
         "tabs": tabs,
         "prices": prices,
         "systems": payload.systems,

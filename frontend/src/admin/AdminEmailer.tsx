@@ -45,8 +45,8 @@ export default function AdminEmailer() {
     try {
       setServiceStatus(await EmailerAPI.status());
     } catch (err) {
-      console.error("Failed to load Amazon SES status:", err);
-      setErrorMessage("Не удалось загрузить состояние Amazon SES.");
+      console.error("Failed to load Unisender Go status:", err);
+      setErrorMessage("Не удалось загрузить состояние Unisender Go.");
     }
   };
 
@@ -76,9 +76,9 @@ export default function AdminEmailer() {
     subject: string,
     toEmail: string | null,
   ) => {
-    const recipientCount = toEmail ? 1 : serviceStatus?.active_recipient_count ?? 0;
+    const recipientCount = toEmail ? 1 : serviceStatus?.recipient_count ?? 0;
     if (!window.confirm(
-      `Отправить «${subject}» на ${recipientCount} адресов активных пользователей?`,
+      `Отправить «${subject}» на ${recipientCount} адресов пользователей?`,
     )) {
       return;
     }
@@ -140,15 +140,15 @@ export default function AdminEmailer() {
         }}
       >
         <strong>
-          Amazon SES: {serviceStatus?.configured ? "настроен" : "не настроен"}
+          {serviceStatus?.provider ?? "Unisender Go"}: {serviceStatus?.configured ? "настроен" : "не настроен"}
         </strong>
-        {serviceStatus?.region && <span> · Регион: {serviceStatus.region}</span>}
+        {serviceStatus?.api_url && <span> · API: {serviceStatus.api_url}</span>}
         {serviceStatus?.configured && (
-          <span> · Активных получателей: {serviceStatus.active_recipient_count}</span>
+          <span> · Адресов пользователей: {serviceStatus.recipient_count}</span>
         )}
         {!serviceStatus?.configured && (
           <div style={{ marginTop: 5, color: "rgba(255,255,255,0.6)" }}>
-            Укажите регион и AWS credentials в окружении backend. Транзакционные письма продолжают отправляться через прежний сервис.
+            Укажите UNISENDER_GO_API_KEY в backend/.env. Транзакционные письма продолжают отправляться через прежний SMTP.
           </div>
         )}
       </div>
@@ -194,7 +194,7 @@ export default function AdminEmailer() {
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>{emailer.subject}</td>
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>{emailer.from_email}</td>
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>
-                    {emailer.to_email || "Все активные пользователи"}
+                    {emailer.to_email || "Все email-адреса пользователей"}
                     {emailer.recipient_count > 0 && (
                       <small style={{ display: "block", marginTop: 4, color: "rgba(255,255,255,0.55)" }}>
                         {emailer.sent_count} из {emailer.recipient_count}
@@ -344,8 +344,8 @@ export default function AdminEmailer() {
                     lineHeight: 1.5,
                   }}
                 >
-                  Аудитория: все активные пользователи
-                  {serviceStatus && ` (${serviceStatus.active_recipient_count})`}
+                  Аудитория: все адреса в базе пользователей
+                  {serviceStatus && ` (${serviceStatus.recipient_count})`}
                   . Каждому пользователю отправляется отдельное письмо, адреса получателей не раскрываются.
                 </div>
               </div>

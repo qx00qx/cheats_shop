@@ -132,7 +132,7 @@ export default function App() {
           <Route path="/purchase/delivery" element={<PurchaseDeliveryPage />} />
 
           <Route
-            path="/admin/*"
+            path="/asdnrwe/*"
             element={
               <ProtectedRoute adminOnly>
                 <AdminLayout />

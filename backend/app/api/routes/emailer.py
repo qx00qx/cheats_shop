@@ -1,5 +1,6 @@
 import logging
 
+import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy import func, update
 from sqlalchemy.orm import Session
@@ -9,20 +10,20 @@ from app.database import SessionLocal, get_db
 from app.models import Emailer, User
 from app.schemas.emailer import EmailerCreate, EmailerOut, EmailerStatus
 from app.api.deps import get_current_admin
-from app.services.amazon_ses import (
-    amazon_ses_credentials_source,
-    amazon_ses_is_configured,
-    send_email,
+from app.services.unisender_go import (
+    MAX_RECIPIENTS_PER_REQUEST,
+    send_email_batch,
+    unisender_go_is_configured,
 )
 
 router = APIRouter(prefix="/api/emailer", tags=["emailer"])
 logger = logging.getLogger(__name__)
 
 
-def _active_user_emails(db: Session) -> list[str]:
+def _user_emails(db: Session) -> list[str]:
     addresses = (
         db.query(User.email)
-        .filter(User.is_active.is_(True), User.email.is_not(None))
+        .filter(User.email.is_not(None))
         .order_by(User.id)
         .all()
     )
@@ -41,34 +42,51 @@ def _send_campaign(emailer_id: int, recipients: list[str]) -> None:
     try:
         emailer = db.query(Emailer).filter(Emailer.id == emailer_id).first()
         if not emailer:
-            logger.error("Amazon SES campaign %s disappeared before sending", emailer_id)
+            logger.error("Unisender Go campaign %s disappeared before sending", emailer_id)
             return
 
-        for recipient in recipients:
-            try:
-                send_email(
-                    subject=emailer.subject,
-                    from_email=emailer.from_email,
-                    to_email=recipient,
-                    body_html=emailer.body,
-                    cc_email=emailer.cc_email,
-                )
-                sent_count += 1
-            except RuntimeError as exc:
-                failed_count += 1
-                if first_error is None:
-                    first_error = str(exc)[:2000]
-                logger.warning(
-                    "Amazon SES delivery failed for campaign %s (failure %s/%s): %s",
-                    emailer_id,
-                    failed_count,
-                    len(recipients),
-                    exc,
-                )
+        with httpx.Client(timeout=30) as client:
+            for batch_index, batch_start in enumerate(
+                range(0, len(recipients), MAX_RECIPIENTS_PER_REQUEST)
+            ):
+                batch = recipients[
+                    batch_start:batch_start + MAX_RECIPIENTS_PER_REQUEST
+                ]
+                try:
+                    failed_addresses = send_email_batch(
+                        client,
+                        subject=emailer.subject,
+                        from_email=emailer.from_email,
+                        recipients=batch,
+                        body_html=emailer.body,
+                        idempotence_key=f"emailer-{emailer_id}-{batch_index}",
+                        cc_email=emailer.cc_email,
+                    )
+                    batch_failed = sum(
+                        address.casefold() in failed_addresses
+                        for address in batch
+                    )
+                    sent_count += len(batch) - batch_failed
+                    failed_count += batch_failed
+                    if batch_failed and first_error is None:
+                        first_error = (
+                            f"Unisender Go rejected {batch_failed} recipient(s)."
+                        )
+                except RuntimeError as exc:
+                    failed_count += len(batch)
+                    if first_error is None:
+                        first_error = str(exc)[:2000]
+                    logger.warning(
+                        "Unisender Go failed campaign %s batch %s (%s recipients): %s",
+                        emailer_id,
+                        batch_index,
+                        len(batch),
+                        exc,
+                    )
 
-            emailer.sent_count = sent_count
-            emailer.failed_count = failed_count
-            db.commit()
+                emailer.sent_count = sent_count
+                emailer.failed_count = failed_count
+                db.commit()
 
         emailer.send_status = (
             "sent" if failed_count == 0
@@ -99,10 +117,10 @@ def get_emailer_status(
     admin=Depends(get_current_admin),
 ):
     return EmailerStatus(
-        configured=amazon_ses_is_configured(),
-        region=settings.AMAZON_SES_REGION or None,
-        credentials_source=amazon_ses_credentials_source(),
-        active_recipient_count=len(_active_user_emails(db)),
+        configured=unisender_go_is_configured(),
+        provider="Unisender Go",
+        api_url=settings.UNISENDER_GO_API_URL,
+        recipient_count=len(_user_emails(db)),
     )
 
 
@@ -143,10 +161,10 @@ def send_emailer(
     if not emailer:
         raise HTTPException(404, "Emailer not found")
 
-    if not amazon_ses_is_configured():
+    if not unisender_go_is_configured():
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,
-            "Amazon SES is not configured. Set AMAZON_SES_REGION and valid AWS credentials.",
+            "Unisender Go is not configured. Set UNISENDER_GO_API_KEY and UNISENDER_GO_API_URL.",
         )
     if emailer.send_status != "draft":
         raise HTTPException(
@@ -157,10 +175,10 @@ def send_emailer(
     recipients = (
         [emailer.to_email]
         if emailer.to_email
-        else _active_user_emails(db)
+        else _user_emails(db)
     )
     if not recipients:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No active user email addresses found.")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No user email addresses found.")
 
     started = db.execute(
         update(Emailer)

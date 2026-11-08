@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../store/cart";
 import { OrdersAPI } from "../api/orders";
 import PaymentMethodSelector, { PaymentMethod } from "../components/PaymentMethodSelector";
 import { formatPrice } from "../utils/format";
 import { useAuth } from "../store/auth";
+import { getCheatPromotion } from "../api/catalog";
+import type { CheatPromotion } from "../utils/cheatPromotion";
+import { getCheatDiscountPercent } from "../utils/cheatPromotion";
 
 export default function CheckoutPage() {
   const { items, total, clear } = useCart();
@@ -13,7 +16,28 @@ export default function CheckoutPage() {
   const [method, setMethod] = useState<PaymentMethod>("card");
   const [promo, setPromo] = useState("");
   const [busy, setBusy] = useState(false);
-  const discountPercent = Math.min(10, Math.max(0, user?.discount_percent ?? 0));
+  const [promotion, setPromotion] = useState<CheatPromotion | null>(null);
+  const [promotionLoaded, setPromotionLoaded] = useState(false);
+  const [promotionError, setPromotionError] = useState(false);
+
+  useEffect(() => {
+    getCheatPromotion()
+      .then(setPromotion)
+      .catch((error: unknown) => {
+        console.error("Failed to load checkout promotion:", error);
+        setPromotionError(true);
+      })
+      .finally(() => setPromotionLoaded(true));
+  }, []);
+
+  const discountPercent = getCheatDiscountPercent(
+    user?.discount_percent,
+    promotion?.active ? promotion.discount_percent : 0,
+    promotion?.ends_at,
+  );
+  const isPromotionActive = Boolean(
+    promotion?.active && Date.now() < new Date(promotion.ends_at).getTime(),
+  );
   const discountedTotal = items.reduce(
     (sum, item) =>
       sum + Math.round(item.price * item.qty * (100 - discountPercent)) / 100,
@@ -67,7 +91,7 @@ export default function CheckoutPage() {
         <hr style={{ borderColor: "var(--border-color)", margin: "12px 0" }} />
         {discountPercent > 0 && (
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <span>Накопительная скидка</span>
+            <span>{isPromotionActive ? "Акционная скидка" : "Накопительная скидка"}</span>
             <span className="rating">{discountPercent}%</span>
           </div>
         )}
@@ -78,6 +102,11 @@ export default function CheckoutPage() {
       </div>
 
       <div className="card">
+        {promotionError && (
+          <p role="alert">
+            Не удалось проверить условия акции. Обновите страницу перед оплатой.
+          </p>
+        )}
         <div className="payment-title" style={{ marginBottom: 12 }}>
           Способ оплаты
         </div>
@@ -91,8 +120,8 @@ export default function CheckoutPage() {
           style={{ marginTop: 12 }}
         />
 
-        <button className="purchase-btn" style={{ marginTop: 16 }} onClick={submit} disabled={busy}>
-          {busy ? "Оформляем…" : "Оплатить"}
+        <button className="purchase-btn" style={{ marginTop: 16 }} onClick={submit} disabled={busy || !promotionLoaded || promotionError}>
+          {busy ? "Оформляем…" : !promotionLoaded ? "Проверяем скидку…" : "Оплатить"}
         </button>
       </div>
     </div>

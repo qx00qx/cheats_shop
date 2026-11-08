@@ -5,11 +5,14 @@ import { useModalStore } from "../hooks/useModal";
 import PurchaseModalContent from "../components/PurchaseModalContent";
 import Seo from "../components/Seo";
 import { getMockItemSales } from "../utils/itemSalesMock";
+import { applyDiscount } from "../utils/cheatPromotion";
 
 type Account = {
   id: number;
   title: string;
   price: number;
+  promo_discount_percent: number;
+  promo_expires_at: string;
   stock: number;
   in_stock: boolean;
   type: string;
@@ -99,6 +102,8 @@ export default function AccountsPage() {
           duration_days: null,
           price: account.price,
           old_price: null,
+          promo_discount_percent: account.promo_discount_percent,
+          promo_expires_at: account.promo_expires_at,
         }}
         accountId={account.id}
       />,
@@ -109,6 +114,7 @@ export default function AccountsPage() {
   return (
     <main className="acc-catalog">
       <Seo
+        pageKey="accounts"
         title="Магазин игровых аккаунтов"
         description="Каталог игровых аккаунтов MILLEX: выбирайте игру, сравнивайте предложения и смотрите наличие и цены."
         structuredData={{
@@ -233,7 +239,17 @@ export default function AccountsPage() {
                       </span>
                     </div>
                     <div className="acc-card-footer">
-                      <span className="acc-price">{formatPrice(account.price)}</span>
+                      <span className="acc-price">
+                        {account.promo_discount_percent > 0 &&
+                          Date.now() < new Date(account.promo_expires_at).getTime() ? (
+                          <>
+                            <span className="price-old">{formatPrice(account.price)}</span>{" "}
+                            {formatPrice(applyDiscount(account.price, account.promo_discount_percent))}
+                          </>
+                        ) : (
+                          formatPrice(account.price)
+                        )}
+                      </span>
                       {account.in_stock ? (
                         <button
                           className="acc-btn acc-btn-buy"

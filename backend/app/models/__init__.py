@@ -16,6 +16,8 @@ from app.models.accounting import (
     AccountingItemCost,
     AccountingSettings,
 )
+from app.models.seo_settings import SeoSettings
+from app.models.seo_page import SeoPage
 
 __all__ = [
     "User", "BalanceAudit",
@@ -31,4 +33,6 @@ __all__ = [
     "CheatFeatureCategory", "CheatFeatureAssignment",
     "PasswordResetToken",
     "AccountingEntry", "AccountingExpense", "AccountingItemCost", "AccountingSettings",
+    "SeoSettings",
+    "SeoPage",
 ]

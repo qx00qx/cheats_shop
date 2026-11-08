@@ -23,6 +23,7 @@ from app.services.email_delivery import send_delivery_email
 from app.db import SessionMaker
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram_dialog import setup_dialogs
@@ -359,9 +360,11 @@ async def main():
         bool(settings.smtp_from_email),
     )
 
+    bot_session = AiohttpSession(proxy=settings.telegram_proxy_url or None)
     bot = Bot(
         token=settings.bot_token,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+        session=bot_session,
     )
 
     dp = Dispatcher()

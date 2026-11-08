@@ -83,6 +83,7 @@ export default function BlogPage() {
   return (
     <div className="blog-page-shell">
       <Seo
+        pageKey="blog"
         title="Блог об игровом софте и играх"
         description="Новости, инструкции и материалы об игровом софте, функциях и популярных играх от MILLEX."
         structuredData={{

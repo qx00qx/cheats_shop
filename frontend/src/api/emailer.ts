@@ -27,9 +27,9 @@ export type EmailerCreate = {
 
 export type EmailerServiceStatus = {
   configured: boolean;
-  region: string | null;
-  credentials_source: string;
-  active_recipient_count: number;
+  provider: string;
+  api_url: string;
+  recipient_count: number;
 };
 
 export const EmailerAPI = {

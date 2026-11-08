@@ -32,6 +32,8 @@ class BlogArticle(Base):
     tags: Mapped[str] = mapped_column(String(500), default="")
     meta_title: Mapped[str] = mapped_column(String(255), default="")
     meta_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    seo_image: Mapped[str | None] = mapped_column(Text, nullable=True)
+    seo_noindex: Mapped[bool] = mapped_column(default=False)
     vis: Mapped[int] = mapped_column(Integer, default=1)
     posled: Mapped[int] = mapped_column(Integer, default=999)
 

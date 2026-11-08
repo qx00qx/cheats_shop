@@ -30,12 +30,17 @@ class Settings(BaseSettings):
     SMTP_FROM_EMAIL: str = ""
     SMTP_USE_TLS: bool = True
     SMTP_USE_SSL: bool = False
+    # Accepted if shared deployment configuration also passes the bot-only proxy.
+    TELEGRAM_PROXY_URL: str = ""
 
     AMAZON_SES_REGION: str = ""
     AMAZON_SES_ACCESS_KEY_ID: str = ""
     AMAZON_SES_SECRET_ACCESS_KEY: str = ""
     AMAZON_SES_SESSION_TOKEN: str = ""
     AMAZON_SES_CONFIGURATION_SET: str = ""
+
+    UNISENDER_GO_API_KEY: str = ""
+    UNISENDER_GO_API_URL: str = "https://goapi.unisender.ru/ru/transactional/api/v1"
 
     # Platega (выплаты / payout)
     PLATEGA_PAYOUT_SECRET: str = ""

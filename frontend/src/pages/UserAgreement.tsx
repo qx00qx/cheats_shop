@@ -90,6 +90,7 @@ export default function UserAgreement() {
   return (
     <main className="policy-page">
       <Seo
+        pageKey="user-agreement"
         title="Пользовательское соглашение"
         description="Пользовательское соглашение MILLEX. Условия использования сервиса millex.market, приобретения цифровых товаров, программного обеспечения и предоставления услуг."
       />

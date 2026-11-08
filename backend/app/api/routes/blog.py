@@ -1,9 +1,10 @@
 import html
 import re
 from datetime import date
+from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin
@@ -27,6 +28,23 @@ class BlogArticleInput(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     text: str = Field(..., min_length=1, max_length=1_000_000)
     vis: int | None = Field(default=None, ge=0, le=1)
+    seo_title: str | None = Field(default=None, max_length=255)
+    seo_description: str | None = Field(default=None, max_length=500)
+    seo_image: str | None = Field(default=None, max_length=2000)
+    seo_noindex: bool = False
+
+    @field_validator("seo_image")
+    @classmethod
+    def validate_seo_image(cls, value: str | None) -> str | None:
+        if value is None or not value.strip():
+            return None
+        normalized = value.strip()
+        if normalized.startswith("/") and not normalized.startswith("//"):
+            return normalized
+        parsed = urlsplit(normalized)
+        if parsed.scheme in {"http", "https"} and parsed.netloc:
+            return normalized
+        raise ValueError("Укажите HTTP(S)-ссылку или путь к изображению на сайте")
 
 
 class BlogArticleVisibilityInput(BaseModel):
@@ -71,6 +89,10 @@ def _serialize_admin_article(article: BlogArticle) -> dict:
         "text": article.text or "",
         "vis": article.vis,
         "date": article.date.isoformat() if article.date else None,
+        "seo_title": article.meta_title or "",
+        "seo_description": article.meta_description or "",
+        "seo_image": article.seo_image or "",
+        "seo_noindex": article.seo_noindex,
     }
 
 
@@ -121,8 +143,14 @@ def create_admin_blog_article(
         date=date.today(),
         vis=1,
         read_time=max(1, (len(plain_text.split()) + 199) // 200),
-        meta_title=name,
-        meta_description=excerpt,
+        meta_title=payload.seo_title.strip() if payload.seo_title else name,
+        meta_description=(
+            payload.seo_description.strip()
+            if payload.seo_description is not None
+            else excerpt
+        ),
+        seo_image=payload.seo_image,
+        seo_noindex=payload.seo_noindex,
     )
     db.add(article)
     db.commit()
@@ -152,8 +180,18 @@ def update_admin_blog_article(
     article.text = content
     article.small = excerpt
     article.read_time = max(1, (len(plain_text.split()) + 199) // 200)
-    article.meta_title = name
-    article.meta_description = excerpt
+    if "seo_title" in payload.model_fields_set:
+        article.meta_title = (payload.seo_title or "").strip()
+    elif "text" in payload.model_fields_set or "name" in payload.model_fields_set:
+        article.meta_title = name
+    if "seo_description" in payload.model_fields_set:
+        article.meta_description = (payload.seo_description or "").strip()
+    elif "text" in payload.model_fields_set or "name" in payload.model_fields_set:
+        article.meta_description = excerpt
+    if "seo_image" in payload.model_fields_set:
+        article.seo_image = payload.seo_image
+    if "seo_noindex" in payload.model_fields_set:
+        article.seo_noindex = payload.seo_noindex
     if payload.vis is not None:
         article.vis = payload.vis
     db.commit()
@@ -223,4 +261,6 @@ def get_blog_article(slug: str, db: Session = Depends(get_db)):
         updated_at=None,
         seo_title=article.meta_title or None,
         seo_description=article.meta_description,
+        seo_image=article.seo_image,
+        seo_noindex=article.seo_noindex,
     )

@@ -4,6 +4,7 @@ export default function CookiePage() {
   return (
     <div className="container" style={{ paddingTop: 32, maxWidth: 720 }}>
       <Seo
+        pageKey="cookie"
         title="Политика использования cookie"
         description="Информация об использовании файлов cookie на сайте MILLEX."
       />
