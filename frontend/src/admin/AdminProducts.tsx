@@ -82,9 +82,10 @@ type AdminItem = Omit<ItemDraft, "feature_categories"> & {
   feature_categories?: AssignedFeatureCategory[];
 };
 
-type ItemSort = "newest" | "oldest" | "name" | "game" | "price-asc" | "price-desc" | "active" | "inactive";
+type ItemSort = "security" | "newest" | "oldest" | "name" | "game" | "price-asc" | "price-desc" | "active" | "inactive";
 
 const itemSortOptions: { value: ItemSort; label: string }[] = [
+  { value: "security", label: "По статусу безопасности" },
   { value: "newest", label: "Сначала новые" },
   { value: "oldest", label: "Сначала старые" },
   { value: "name", label: "По названию" },
@@ -258,11 +259,13 @@ export default function AdminProducts() {
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const videoUploadTarget = useRef<number | null>(null);
   const videoFileInput = useRef<HTMLInputElement>(null);
-  const [itemSort, setItemSort] = useState<ItemSort>("newest");
+  const [itemSort, setItemSort] = useState<ItemSort>("security");
 
   const sortedItems = [...items].sort((left, right) => {
     const newestFirst = right.id - left.id;
     switch (itemSort) {
+      case "security":
+        return left.security_status - right.security_status || newestFirst;
       case "oldest":
         return left.id - right.id;
       case "name":
