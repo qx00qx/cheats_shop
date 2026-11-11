@@ -103,8 +103,15 @@ function formatSaleDate(value: string): string {
   });
 }
 
-function normalizeFeature(value: string): string {
-  return value.trim().toLocaleLowerCase("ru-RU").replace(/\s+/g, " ");
+function formatSharedCategoryCount(count: number): string {
+  const remainder100 = count % 100;
+  const remainder10 = count % 10;
+  const noun = remainder10 === 1 && remainder100 !== 11
+    ? "общая категория"
+    : remainder10 >= 2 && remainder10 <= 4 && (remainder100 < 12 || remainder100 > 14)
+      ? "общие категории"
+      : "общих категорий";
+  return `${count} ${noun}`;
 }
 
 export default function ItemPage() {
@@ -118,7 +125,7 @@ export default function ItemPage() {
   const [expandedFeatureCategoryId, setExpandedFeatureCategoryId] = useState<number | null>(null);
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [similarCheats, setSimilarCheats] = useState<
-    { cheat: SimilarCheat; sharedFeatures: string[] }[]
+    { cheat: SimilarCheat; sharedCategoryCount: number }[]
   >([]);
   const similarCheatsTrackRef = useRef<HTMLDivElement>(null);
   const itemSalesTrackRef = useRef<HTMLDivElement>(null);
@@ -173,13 +180,10 @@ export default function ItemPage() {
       return;
     }
 
-    const currentFeatures = new Set(
-      (item.feature_categories ?? [])
-        .flatMap((category) => category.features)
-        .map(normalizeFeature)
-        .filter(Boolean),
+    const currentCategoryIds = new Set(
+      (item.feature_categories ?? []).map((category) => category.category_id),
     );
-    if (currentFeatures.size < 2) {
+    if (currentCategoryIds.size === 0) {
       setSimilarCheats([]);
       return;
     }
@@ -198,23 +202,16 @@ export default function ItemPage() {
         const matches = items
           .filter((candidate) => candidate.alias !== item.alias)
           .map((cheat) => {
-            const candidateFeatures = new Map<string, string>();
-            (cheat.feature_categories ?? [])
-              .flatMap((category) => category.features)
-              .forEach((feature) => {
-                const normalized = normalizeFeature(feature);
-                if (normalized && !candidateFeatures.has(normalized)) {
-                  candidateFeatures.set(normalized, feature.trim());
-                }
-              });
-            const sharedFeatures = [...currentFeatures]
-              .filter((feature) => candidateFeatures.has(feature))
-              .map((feature) => candidateFeatures.get(feature) ?? feature);
-            return { cheat, sharedFeatures };
+            const sharedCategoryCount = new Set(
+              (cheat.feature_categories ?? [])
+                .map((category) => category.category_id)
+                .filter((categoryId) => currentCategoryIds.has(categoryId)),
+            ).size;
+            return { cheat, sharedCategoryCount };
           })
-          .filter((match) => match.sharedFeatures.length >= 2)
+          .filter((match) => match.sharedCategoryCount > 0)
           .sort((first, second) =>
-            second.sharedFeatures.length - first.sharedFeatures.length
+            second.sharedCategoryCount - first.sharedCategoryCount
             || first.cheat.name.localeCompare(second.cheat.name, "ru"),
           );
 
@@ -869,7 +866,7 @@ export default function ItemPage() {
                   Похожие читы
                 </h2>
                 <p className="similar-cheats__description">
-                  Подобраны по общим функциям этого чита
+                  Подобраны по общим категориям функционала
                 </p>
               </div>
               {similarCheats.length > 1 && (
@@ -899,64 +896,106 @@ export default function ItemPage() {
             {similarCheats.length > 0 ? (
               <div className="similar-cheats__viewport">
                 <div className="similar-cheats__grid" ref={similarCheatsTrackRef}>
-                {similarCheats.map(({ cheat, sharedFeatures }) => {
-                  const itemDiscountPercent = getCheatDiscountPercent(
-                    0,
-                    cheat.promo_discount_percent,
-                    cheat.promo_expires_at,
-                  );
-                  const price = Number(cheat.price);
-                  const discountedPrice = itemDiscountPercent
-                    ? applyDiscount(price, itemDiscountPercent)
-                    : price;
+                  {similarCheats.map(({ cheat, sharedCategoryCount }) => {
+                    const itemDiscountPercent = getCheatDiscountPercent(
+                      0,
+                      cheat.promo_discount_percent,
+                      cheat.promo_expires_at,
+                    );
+                    const price = Number(cheat.price);
+                    const discountedPrice = itemDiscountPercent
+                      ? applyDiscount(price, itemDiscountPercent)
+                      : price;
+                    const featureTags = (cheat.feature_categories ?? [])
+                      .map((category) => category.title.trim())
+                      .filter(Boolean);
 
-                  return (
-                    <Link
-                      className="similar-cheat-card"
-                      key={cheat.id}
-                      to={`/item/${encodeURIComponent(cheat.alias)}`}
-                    >
-                      <div className="similar-cheat-card__image">
-                        {cheat.image ? (
-                          <img src={cheat.image} alt="" loading="lazy" />
-                        ) : (
-                          <span aria-hidden="true">MILLEX</span>
-                        )}
-                        <span className="similar-cheat-card__match">
-                          {sharedFeatures.length} общие функции
-                        </span>
-                      </div>
-                      <div className="similar-cheat-card__body">
-                        <h3 className="similar-cheat-card__name">{cheat.name}</h3>
-                        <div className="similar-cheat-card__features">
-                          {sharedFeatures.slice(0, 3).map((feature) => (
-                            <span key={normalizeFeature(feature)}>{feature}</span>
-                          ))}
-                        </div>
-                        <div className="similar-cheat-card__footer">
-                          {Number.isFinite(price) && price > 0 ? (
-                            <span className="similar-cheat-card__price">
-                              От{" "}
-                              <strong>
-                                {Math.round(discountedPrice).toLocaleString("ru-RU")} ₽
-                              </strong>
-                            </span>
+                    return (
+                      <Link
+                        className="similar-cheat-card"
+                        key={cheat.id}
+                        to={`/item/${encodeURIComponent(cheat.alias)}`}
+                      >
+                        <div className="similar-cheat-card__image">
+                          {cheat.image ? (
+                            <img src={cheat.image} alt="" loading="lazy" />
                           ) : (
-                            <span className="similar-cheat-card__price">Смотреть тарифы</span>
+                            <span aria-hidden="true">MILLEX</span>
                           )}
-                          <span className="similar-cheat-card__link">
-                            Подробнее <span aria-hidden="true">›</span>
+                          <span className="similar-cheat-card__match">
+                            {formatSharedCategoryCount(sharedCategoryCount)}
                           </span>
                         </div>
-                      </div>
-                    </Link>
-                  );
-                })}
+                        <div className="similar-cheat-card__body">
+                          <h3 className="similar-cheat-card__name">{cheat.name}</h3>
+                          <p className="game-page__product-game similar-cheat-card__game">
+                            Читы на {item.game_title || "этой игре"}
+                          </p>
+                          <div
+                            className="similar-cheat-card__features"
+                            aria-label={featureTags.length ? `Функционал: ${featureTags.join(", ")}` : undefined}
+                          >
+                            {featureTags.length > 0 && (
+                              <>
+                                <div className="game-page__feature-tags game-page__feature-tags--desktop">
+                                  {featureTags.slice(0, 7).map((tag, index) => (
+                                    <span key={`${cheat.id}-${tag}-${index}`} title={tag}>
+                                      {tag}
+                                    </span>
+                                  ))}
+                                  {featureTags.length > 7 && (
+                                    <span
+                                      className="game-page__feature-tags-more"
+                                      title={`Еще ${featureTags.length - 7} функций`}
+                                      aria-label={`Еще ${featureTags.length - 7} функций`}
+                                    >
+                                      +
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="game-page__feature-tags game-page__feature-tags--mobile">
+                                  {featureTags.slice(0, 4).map((tag, index) => (
+                                    <span key={`${cheat.id}-${tag}-${index}`} title={tag}>
+                                      {tag}
+                                    </span>
+                                  ))}
+                                  {featureTags.length > 4 && (
+                                    <span
+                                      className="game-page__feature-tags-more"
+                                      title={`Еще ${featureTags.length - 4} функций`}
+                                      aria-label={`Еще ${featureTags.length - 4} функций`}
+                                    >
+                                      +
+                                    </span>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                          <div className="similar-cheat-card__footer">
+                            {Number.isFinite(price) && price > 0 ? (
+                              <span className="similar-cheat-card__price">
+                                От{" "}
+                                <strong>
+                                  {Math.round(discountedPrice).toLocaleString("ru-RU")} ₽
+                                </strong>
+                              </span>
+                            ) : (
+                              <span className="similar-cheat-card__price">Смотреть тарифы</span>
+                            )}
+                            <span className="similar-cheat-card__link">
+                              Подробнее <span aria-hidden="true">›</span>
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             ) : (
               <p className="similar-cheats__empty">
-                Пока нет других читов этой игры с двумя или более общими функциями.
+                Пока нет других читов этой игры с общей категорией функционала.
               </p>
             )}
           </section>
