@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import BlogCard from "../components/blog/BlogCard";
 import Seo from "../components/Seo";
+import { SeoHeading, SeoTextBlock } from "../components/SeoPageContent";
 import { getBlogArticles, getBlogCategories } from "../api/blog";
 import type { BlogArticleListItem, BlogCategory } from "../types/blog";
 
@@ -384,7 +385,11 @@ export default function BlogPage() {
           <div className="blog-hero__content">
             <span className="blog-hero__badge">MILLEX.MARKET</span>
 
-            <h1 className="newhome-hero-title">Блог и инструкции</h1>
+            <SeoHeading
+              pageKey="blog"
+              className="newhome-hero-title"
+              fallback="Блог и инструкции"
+            />
 
           </div>
 
@@ -451,6 +456,9 @@ export default function BlogPage() {
             </div>
           )}
         </section>
+      </div>
+      <div className="blog-shell">
+        <SeoTextBlock pageKey="blog" />
       </div>
     </div>
   );

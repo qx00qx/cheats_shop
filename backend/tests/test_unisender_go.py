@@ -2,10 +2,18 @@ import json
 
 import httpx
 import pytest
+from fastapi import HTTPException
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
-from app.api.routes.emailer import _user_emails
+from app.api.routes.emailer import (
+    _selected_user_emails,
+    _user_emails,
+    create_emailer,
+    search_recipients,
+)
+from app.models.emailer import Emailer
+from app.schemas.emailer import EmailerCreate
 from app.services import unisender_go
 
 
@@ -121,3 +129,62 @@ def test_campaign_audience_includes_all_users_and_deduplicates_emails():
             "inactive@example.com",
         ]
     engine.dispose()
+
+
+def test_selected_campaign_audience_uses_only_selected_users_and_deduplicates():
+    engine = create_engine("sqlite://")
+    with engine.begin() as connection:
+        connection.execute(text("""
+            CREATE TABLE users (
+                id INTEGER PRIMARY KEY,
+                email TEXT,
+                username TEXT
+            )
+        """))
+        connection.execute(text("""
+            INSERT INTO users (id, email, username) VALUES
+                (1, 'first@example.com', 'first'),
+                (2, 'other@example.com', 'other'),
+                (3, 'FIRST@example.com', 'duplicate')
+        """))
+        Emailer.__table__.create(connection)
+
+    with Session(engine) as db:
+        assert _selected_user_emails(db, [3, 1]) == ["first@example.com"]
+        with pytest.raises(HTTPException) as exc_info:
+            _selected_user_emails(db, [99])
+        assert exc_info.value.status_code == 422
+        assert search_recipients("duplicate", 50, db) == [
+            {"id": 3, "username": "duplicate", "email": "FIRST@example.com"},
+        ]
+        campaign = create_emailer(
+            EmailerCreate(
+                subject="Selected users",
+                from_email="news@example.com",
+                body="<p>Test</p>",
+                recipient_mode="selected",
+                recipient_ids=[3, 1],
+            ),
+            db,
+        )
+        assert campaign.to_email is None
+        assert campaign.recipient_emails == ["first@example.com"]
+        db.expire_all()
+        saved_campaign = db.query(Emailer).filter_by(id=campaign.id).one()
+        assert saved_campaign.recipient_emails == ["first@example.com"]
+    engine.dispose()
+
+
+def test_emailer_create_requires_audience_for_selected_mode():
+    base = {
+        "subject": "Test",
+        "from_email": "news@example.com",
+        "body": "<p>Test</p>",
+        "recipient_mode": "selected",
+    }
+
+    with pytest.raises(ValueError, match="Select at least one user"):
+        EmailerCreate(**base)
+
+    campaign = EmailerCreate(**base, recipient_ids=[1, 2])
+    assert campaign.recipient_ids == [1, 2]

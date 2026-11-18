@@ -21,6 +21,9 @@ export function getAuthErrorMessage(error: unknown, action: "login" | "register"
   }
 
   if (status === 400) {
+    if (detail === "Invalid referral code") {
+      return "Реферальная ссылка недействительна. Проверьте ссылку и попробуйте ещё раз.";
+    }
     if (detail === "User already exists") {
       return "Этот email или никнейм уже зарегистрирован. Попробуйте войти в аккаунт.";
     }

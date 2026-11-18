@@ -36,6 +36,33 @@ def _provider_error_message(response: httpx.Response, operation: str) -> str:
 
 
 class NfaClient:
+    async def get_stock(self) -> dict:
+        api_key = _api_key()
+
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                response = await client.get(
+                    f"{settings.NFA_API_BASE_URL.rstrip('/')}/api/v1/stock",
+                    headers={"X-API-Key": api_key, "Accept": "application/json"},
+                )
+                response.raise_for_status()
+                payload = response.json()
+        except httpx.HTTPStatusError as exc:
+            raise RuntimeError(
+                _provider_error_message(exc.response, "получении остатка")
+            ) from exc
+        except httpx.RequestError as exc:
+            raise RuntimeError("Не удалось получить остаток у NFA") from exc
+        except ValueError as exc:
+            raise RuntimeError("NFA вернул некорректный JSON остатка") from exc
+
+        if not isinstance(payload, dict) or payload.get("status") != "success":
+            raise RuntimeError("NFA вернул некорректный ответ остатка")
+        stock = payload.get("stock")
+        if not isinstance(stock, dict):
+            raise RuntimeError("NFA вернул некорректный формат остатка")
+        return stock
+
     async def get_status(self) -> dict:
         api_key = _api_key()
 

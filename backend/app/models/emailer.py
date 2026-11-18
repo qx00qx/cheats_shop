@@ -1,5 +1,6 @@
 from datetime import datetime
-from sqlalchemy import String, Text, Boolean, DateTime, func
+from sqlalchemy import JSON, String, Text, Boolean, DateTime, func, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
@@ -21,3 +22,9 @@ class Emailer(Base):
     sent_count: Mapped[int] = mapped_column(default=0, server_default="0")
     failed_count: Mapped[int] = mapped_column(default=0, server_default="0")
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    recipient_emails: Mapped[list[str]] = mapped_column(
+        JSON().with_variant(JSONB(), "postgresql"),
+        default=list,
+        server_default=text("'[]'"),
+        nullable=False,
+    )

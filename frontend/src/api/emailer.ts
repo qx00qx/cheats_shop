@@ -15,6 +15,7 @@ export type Emailer = {
   sent_count: number;
   failed_count: number;
   last_error: string | null;
+  recipient_emails: string[];
 };
 
 export type EmailerCreate = {
@@ -23,6 +24,14 @@ export type EmailerCreate = {
   to_email: string | null;
   cc_email: string | null;
   body: string;
+  recipient_mode: "all" | "selected" | "single";
+  recipient_ids: number[];
+};
+
+export type EmailRecipient = {
+  id: number;
+  username: string;
+  email: string;
 };
 
 export type EmailerServiceStatus = {
@@ -35,6 +44,8 @@ export type EmailerServiceStatus = {
 export const EmailerAPI = {
   list: () => api.get<Emailer[]>("/emailer").then((r) => r.data),
   status: () => api.get<EmailerServiceStatus>("/emailer/status").then((r) => r.data),
+  recipients: (search: string) =>
+    api.get<EmailRecipient[]>("/emailer/recipients", { params: { search } }).then((r) => r.data),
   get: (id: number) => api.get<Emailer>(`/emailer/${id}`).then((r) => r.data),
   create: (data: EmailerCreate) => api.post<Emailer>("/emailer", data).then((r) => r.data),
   send: (id: number) => api.post<Emailer>(`/emailer/${id}/send`).then((r) => r.data),

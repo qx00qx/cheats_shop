@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import { useModalStore } from "../hooks/useModal";
 import PurchaseModalContent from "../components/PurchaseModalContent";
 import Seo from "../components/Seo";
+import { SeoHeading, SeoTextBlock } from "../components/SeoPageContent";
 import { getMockItemSales } from "../utils/itemSalesMock";
 import { applyDiscount } from "../utils/cheatPromotion";
 
@@ -127,7 +128,11 @@ export default function AccountsPage() {
       />
       <div className="acc-container">
         <div className="acc-hero">
-          <h1 className="acc-title">Магазин аккаунтов</h1>
+          <SeoHeading
+            pageKey="accounts"
+            className="acc-title"
+            fallback="Магазин аккаунтов"
+          />
           <p className="acc-subtitle">Готовые NFA-аккаунты с моментальной автовыдачей после оплаты с баланса.</p>
         </div>
       </div>
@@ -303,6 +308,9 @@ export default function AccountsPage() {
             </div>
           </section>
         </div>
+      </div>
+      <div className="acc-container">
+        <SeoTextBlock pageKey="accounts" />
       </div>
     </main>
   );

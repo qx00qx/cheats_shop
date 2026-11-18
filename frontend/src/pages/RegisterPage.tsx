@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Seo from "../components/Seo";
 import { useAuth } from "../store/auth";
 import { getAuthErrorMessage } from "../utils/authErrorMessage";
@@ -8,6 +8,7 @@ import { getAuthErrorMessage } from "../utils/authErrorMessage";
 export default function RegisterPage() {
   const { register } = useAuth();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -22,7 +23,12 @@ export default function RegisterPage() {
     setSubmitting(true);
 
     try {
-      await register(email.trim(), username.trim(), password);
+      await register(
+        email.trim(),
+        username.trim(),
+        password,
+        searchParams.get("ref")?.trim() || undefined,
+      );
       nav("/");
     } catch (e: any) {
       setErr(getAuthErrorMessage(e, "register"));

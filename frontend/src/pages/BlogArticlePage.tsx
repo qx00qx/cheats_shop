@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getBlogArticleBySlug } from "../api/blog";
 import Seo from "../components/Seo";
+import { SeoTextBlock } from "../components/SeoPageContent";
 import type { BlogArticle } from "../types/blog";
 import { sanitizeBlogHtml } from "../utils/blogHtml";
 
@@ -158,7 +159,9 @@ export default function BlogArticlePage() {
               <span className="blog-card__date">{date}</span>
             </div>
 
-            <h1 className="blog-article__title">{article.name}</h1>
+            <h1 className="blog-article__title">
+              {article.seo_h1?.trim() || article.name}
+            </h1>
 
             <p className="blog-article__excerpt">{article.excerpt}</p>
           </div>
@@ -169,6 +172,7 @@ export default function BlogArticlePage() {
               __html: sanitizeBlogHtml(article.content || ""),
             }}
           />
+          <SeoTextBlock content={article.seo_text} />
         </section>
       </div>
     </div>

@@ -18,6 +18,7 @@ from app.models.accounting import (
 )
 from app.models.seo_settings import SeoSettings
 from app.models.seo_page import SeoPage
+from app.models.referral import ReferralEarning
 
 __all__ = [
     "User", "BalanceAudit",
@@ -35,4 +36,5 @@ __all__ = [
     "AccountingEntry", "AccountingExpense", "AccountingItemCost", "AccountingSettings",
     "SeoSettings",
     "SeoPage",
+    "ReferralEarning",
 ]

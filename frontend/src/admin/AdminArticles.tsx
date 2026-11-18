@@ -10,6 +10,8 @@ type AdminArticle = {
   text: string;
   seo_title: string;
   seo_description: string;
+  seo_h1: string;
+  seo_text: string;
   seo_image: string;
   seo_noindex: boolean;
   vis: number;
@@ -239,6 +241,8 @@ export default function AdminArticles() {
   const [content, setContent] = useState("");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
+  const [seoH1, setSeoH1] = useState("");
+  const [seoText, setSeoText] = useState("");
   const [seoImage, setSeoImage] = useState("");
   const [seoNoindex, setSeoNoindex] = useState(false);
 
@@ -267,6 +271,8 @@ export default function AdminArticles() {
     setContent("");
     setSeoTitle("");
     setSeoDescription("");
+    setSeoH1("");
+    setSeoText("");
     setSeoImage("");
     setSeoNoindex(false);
     setFormError("");
@@ -279,6 +285,8 @@ export default function AdminArticles() {
     setContent(article.text);
     setSeoTitle(article.seo_title || "");
     setSeoDescription(article.seo_description || "");
+    setSeoH1(article.seo_h1 || "");
+    setSeoText(article.seo_text || "");
     setSeoImage(article.seo_image || "");
     setSeoNoindex(article.seo_noindex || false);
     setFormError("");
@@ -296,6 +304,8 @@ export default function AdminArticles() {
           text: article.text,
           seo_title: article.seo_title || "",
           seo_description: article.seo_description || "",
+          seo_h1: article.seo_h1 || "",
+          seo_text: article.seo_text || "",
           seo_image: article.seo_image || "",
           seo_noindex: article.seo_noindex || false,
           vis: nextVisibility,
@@ -327,6 +337,8 @@ export default function AdminArticles() {
         text: sanitizeBlogHtml(content),
         seo_title: seoTitle,
         seo_description: seoDescription,
+        seo_h1: seoH1,
+        seo_text: seoText,
         seo_image: seoImage,
         seo_noindex: seoNoindex,
       };
@@ -391,6 +403,27 @@ export default function AdminArticles() {
             maxLength={500}
             rows={3}
             placeholder="Пусто — использовать краткое описание статьи"
+          />
+        </label>
+        <label>
+          <span>H1 страницы</span>
+          <input
+            className="input"
+            value={seoH1}
+            onChange={(event) => setSeoH1(event.target.value)}
+            maxLength={255}
+            placeholder="Пусто — использовать название статьи"
+          />
+        </label>
+        <label>
+          <span>SEO-текст</span>
+          <textarea
+            className="input"
+            value={seoText}
+            onChange={(event) => setSeoText(event.target.value)}
+            maxLength={20000}
+            rows={6}
+            placeholder="Дополнительный текст под статьёй; допускается HTML"
           />
         </label>
         <label>

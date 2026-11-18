@@ -10,5 +10,7 @@ class SeoPage(Base):
     page_key: Mapped[str] = mapped_column(String(64), primary_key=True)
     title: Mapped[str] = mapped_column(String(255), default="")
     description: Mapped[str] = mapped_column(Text, default="")
+    h1: Mapped[str] = mapped_column(String(255), default="")
+    seo_text: Mapped[str] = mapped_column(Text, default="")
     image: Mapped[str] = mapped_column(String(2000), default="")
     noindex: Mapped[bool] = mapped_column(Boolean, default=False)

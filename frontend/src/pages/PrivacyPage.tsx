@@ -1,5 +1,6 @@
 import React from "react";
 import Seo from "../components/Seo";
+import { SeoHeading, SeoTextBlock } from "../components/SeoPageContent";
 
 const sections = [
   {
@@ -70,9 +71,11 @@ export default function PrivacyPage() {
         </nav>
 
         <section className="policy-card">
-          <h1 className="policy-title">
-            ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ
-          </h1>
+          <SeoHeading
+            pageKey="privacy"
+            className="policy-title"
+            fallback="ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ"
+          />
 
           <p className="policy-intro">
             Дата обновления: 18 октября 2026 г.
@@ -103,6 +106,7 @@ export default function PrivacyPage() {
             С уважением, millex.market.
           </p>
         </section>
+        <SeoTextBlock pageKey="privacy" />
       </div>
     </main>
   );

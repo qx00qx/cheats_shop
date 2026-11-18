@@ -36,6 +36,10 @@ from app.services.cheat_promotion import (
     get_promotion_start,
 )
 from app.services.user_discount import increase_user_discount
+from app.services.referrals import (
+    award_referral_commission,
+    reverse_referral_commission,
+)
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 logger = logging.getLogger(__name__)
@@ -714,6 +718,7 @@ async def platega_webhook(request: Request, db: Session = Depends(get_db)):
 
         if status == "CONFIRMED" and bot_order.status == "pending_payment":
             bot_order.status = "new"
+            account = None
             if bot_order.site_user_id is not None:
                 account = (
                     db.query(User)
@@ -743,11 +748,24 @@ async def platega_webhook(request: Request, db: Session = Depends(get_db)):
                     increase_user_discount(account)
             fulfill_bot_order(db, bot_order)
             record_bot_order_sale(db, bot_order)
+            if account:
+                award_referral_commission(
+                    db,
+                    buyer=account,
+                    sale_amount=Decimal(str(bot_order.amount or 0)),
+                    source_type="bot_order",
+                    source_id=bot_order.external_order_id,
+                )
         elif status in {"CANCELED", "CANCELLED"} and bot_order.status == "pending_payment":
             bot_order.status = "failed"
         elif status in {"CHARGEBACK", "CHARGEBACKED"}:
             bot_order.status = "chargeback"
             record_bot_order_chargeback(db, bot_order)
+            reverse_referral_commission(
+                db,
+                source_type="bot_order",
+                source_id=bot_order.external_order_id,
+            )
 
         db.commit()
         logger.info(
@@ -790,6 +808,11 @@ async def platega_webhook(request: Request, db: Session = Depends(get_db)):
 
     if status in {"CHARGEBACK", "CHARGEBACKED"}:
         order.status = "chargeback"
+        reverse_referral_commission(
+            db,
+            source_type="store_order",
+            source_id=order.id,
+        )
         db.commit()
         logger.info("Acknowledged Platega order callback: transaction_id=%s status=%s", tx_id, status)
         return {"ok": True}
@@ -813,6 +836,13 @@ async def platega_webhook(request: Request, db: Session = Depends(get_db)):
         order.status = "paid_no_stock"
     else:
         fulfill_store_order(db, order, account)
+        award_referral_commission(
+            db,
+            buyer=account,
+            sale_amount=Decimal(str(order.total)),
+            source_type="store_order",
+            source_id=order.id,
+        )
     db.commit()
     logger.info("Acknowledged Platega order callback: transaction_id=%s status=%s", tx_id, status)
     return {"ok": True}
@@ -927,7 +957,15 @@ async def create_item_purchase(
         )
         db.add(bot_order)
         db.flush()
+        fulfill_bot_order(db, bot_order)
         record_bot_order_sale(db, bot_order)
+        award_referral_commission(
+            db,
+            buyer=locked_user,
+            sale_amount=amount,
+            source_type="bot_order",
+            source_id=external_order_id,
+        )
         db.commit()
         return {
             "order_id": external_order_id,

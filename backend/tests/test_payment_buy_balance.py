@@ -11,7 +11,14 @@ from app.api.deps import get_optional_current_user
 from app.api.routes import payments as payments_route
 from app.database import Base, get_db
 from app.main import app
-from app.models import AccountingEntry, BalanceAudit, BotOrder, Key, User
+from app.models import (
+    AccountingEntry,
+    BalanceAudit,
+    BotOrder,
+    Key,
+    ReferralEarning,
+    User,
+)
 
 
 def make_balance_purchase_client(monkeypatch, *, balance="1000"):
@@ -71,8 +78,9 @@ def make_balance_purchase_client(monkeypatch, *, balance="1000"):
     monkeypatch.setattr(
         payments_route,
         "effective_cheat_discount_percent",
-        lambda discount: discount,
+        lambda discount, **_kwargs: discount,
     )
+    monkeypatch.setattr(payments_route, "get_promotion_start", lambda _db: None)
     monkeypatch.setattr(payments_route.settings, "SMTP_HOST", "")
     monkeypatch.setattr(payments_route.settings, "SMTP_FROM_EMAIL", "")
     monkeypatch.setattr(payments_route.settings, "PLATEGA_MERCHANT_ID", "merchant-test")
@@ -280,7 +288,80 @@ def test_guest_confirmed_payment_delivers_key_for_email_worker(monkeypatch):
         engine.dispose()
 
 
-def test_balance_purchase_stays_in_admin_queue_even_when_stock_exists(monkeypatch):
+def test_referred_platega_purchase_credits_referrer_once(monkeypatch):
+    engine, session_factory, client, previous, user_id = make_balance_purchase_client(
+        monkeypatch
+    )
+    headers = {"X-MerchantId": "merchant-test", "X-Secret": "secret-test"}
+    callback = {
+        "id": "referred-paid-transaction",
+        "amount": 105,
+        "currency": "RUB",
+        "status": "CONFIRMED",
+        "paymentMethod": 2,
+    }
+
+    async def create_payment(**_kwargs):
+        return {
+            "redirect": "https://payments.example.test/checkout",
+            "transactionId": "referred-paid-transaction",
+        }
+
+    monkeypatch.setattr(payments_route.platega, "create_payment", create_payment)
+    try:
+        with session_factory() as db:
+            referrer = User(
+                email="referrer@example.com",
+                username="referrer",
+                password_hash="hash",
+                balance="0",
+            )
+            db.add(referrer)
+            db.flush()
+            buyer = db.get(User, user_id)
+            buyer.referred_by = referrer.id
+            referrer_id = referrer.id
+            db.add(Key(
+                item_alias="test-product",
+                key_value="REFERRED-CHEAT-KEY",
+                status="free",
+            ))
+            db.commit()
+
+        purchase = client.post("/api/payments/buy", json={
+            "item_alias": "test-product",
+            "tariff_id": 1,
+            "payment_method": "sbp",
+        })
+        assert purchase.status_code == 200, purchase.text
+
+        confirmed = client.post(
+            "/api/payments/webhook",
+            json=callback,
+            headers=headers,
+        )
+        retry = client.post(
+            "/api/payments/webhook",
+            json=callback,
+            headers=headers,
+        )
+
+        assert confirmed.status_code == 200, confirmed.text
+        assert retry.status_code == 200, retry.text
+        with session_factory() as db:
+            referrer = db.get(User, referrer_id)
+            earnings = db.query(ReferralEarning).all()
+            assert referrer.balance == "5.00"
+            assert len(earnings) == 1
+            assert earnings[0].commission_amount == 5
+    finally:
+        client.close()
+        app.dependency_overrides.clear()
+        app.dependency_overrides.update(previous)
+        engine.dispose()
+
+
+def test_balance_purchase_auto_delivers_stock_key(monkeypatch):
     engine, session_factory, client, previous, user_id = make_balance_purchase_client(
         monkeypatch
     )
@@ -302,14 +383,15 @@ def test_balance_purchase_stays_in_admin_queue_even_when_stock_exists(monkeypatc
         })
 
         assert response.status_code == 200
-        assert response.json()["status"] == "new"
+        assert response.json()["status"] == "completed"
         assert response.json()["delivery"] is None
         with session_factory() as db:
             order = db.query(BotOrder).one()
             key = db.get(Key, key_id)
-            assert order.status == "new"
+            assert order.status == "completed"
+            assert order.key_value == "AVAILABLE-KEY"
             assert order.notification_sent_at is None
-            assert key.status == "free"
+            assert key.status == "used"
             assert db.get(User, user_id).balance == "905.00"
     finally:
         client.close()

@@ -84,6 +84,8 @@ def admin_client():
                 posled INTEGER DEFAULT 999,
                 seo_title TEXT,
                 seo_description TEXT,
+                seo_h1 TEXT,
+                seo_text TEXT,
                 seo_image TEXT,
                 seo_noindex BOOLEAN DEFAULT FALSE
             )
@@ -94,8 +96,11 @@ def admin_client():
                 "categoryData" TEXT,
                 status INTEGER,
                 vis INTEGER DEFAULT 1,
+                sort_order INTEGER NOT NULL DEFAULT 999,
                 seo_title TEXT,
                 seo_description TEXT,
+                seo_h1 TEXT,
+                seo_text TEXT,
                 seo_image TEXT,
                 seo_noindex BOOLEAN DEFAULT FALSE
             )
@@ -168,21 +173,29 @@ def test_admin_games_crud_and_soft_hide(admin_client):
         "title": "Rust",
         "slug": "rust",
         "cover_url": "",
+        "seo_h1": "Читы для Rust",
+        "seo_text": "<p>SEO-описание Rust</p>",
         "sort_order": 2,
         "is_active": True,
     })
     assert created.status_code == 201
+    assert created.json()["seo_h1"] == "Читы для Rust"
+    assert created.json()["seo_text"] == "<p>SEO-описание Rust</p>"
     game_id = created.json()["id"]
 
     hidden = admin_client.put(f"/api/catalog/admin/games/{game_id}", json={
         "title": "Rust",
         "slug": "rust",
         "cover_url": "",
+        "seo_h1": "Актуальные читы Rust",
+        "seo_text": "<p>Обновлённое SEO-описание Rust</p>",
         "sort_order": 2,
         "is_active": False,
     })
     assert hidden.status_code == 200
     assert hidden.json()["is_active"] is False
+    assert hidden.json()["seo_h1"] == "Актуальные читы Rust"
+    assert hidden.json()["seo_text"] == "<p>Обновлённое SEO-описание Rust</p>"
 
 
 def test_admin_can_hide_and_restore_item_in_catalog(admin_client):

@@ -20,12 +20,13 @@ export const AuthAPI = {
   login: (email: string, password: string) =>
     api.post<AuthResponse>("/auth/login", { email, password }).then((r) => r.data),
 
-  register: (email: string, username: string, password: string) =>
+  register: (email: string, username: string, password: string, referralCode?: string) =>
     api
       .post<AuthResponse>("/auth/register", {
         email,
         username,
         password,
+        ...(referralCode ? { referral_code: referralCode } : {}),
       })
       .then((r) => r.data),
 

@@ -127,16 +127,22 @@ def test_admin_can_set_page_seo_and_sitemap_excludes_noindex_pages():
             json={
                 "title": "Главная магазина",
                 "description": "SEO описание главной",
+                "h1": "Отдельный заголовок",
+                "seo_text": "<p>SEO-текст главной</p>",
                 "image": "/uploads/home.jpg",
                 "noindex": True,
             },
         )
         assert updated.status_code == 200
         assert updated.json()["title"] == "Главная магазина"
+        assert updated.json()["h1"] == "Отдельный заголовок"
+        assert updated.json()["seo_text"] == "<p>SEO-текст главной</p>"
         assert updated.json()["noindex"] is True
 
         public = client.get("/api/seo/pages/home")
         assert public.status_code == 200
+        assert public.json()["h1"] == "Отдельный заголовок"
+        assert public.json()["seo_text"] == "<p>SEO-текст главной</p>"
         assert public.json()["image"] == "/uploads/home.jpg"
         assert public.json()["noindex"] is True
 

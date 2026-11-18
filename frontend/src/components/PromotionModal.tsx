@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { getCheatPromotion } from "../api/catalog";
 import { type CheatPromotion } from "../utils/cheatPromotion";
 
-const DISMISSED_KEY = "millex_15_percent_global_promotion_dismissed";
+const DISMISSED_KEY = "millex_black_friday_2026_dismissed";
 
 export default function PromotionModal() {
   const [promotion, setPromotion] = useState<CheatPromotion | null>(null);
@@ -74,17 +74,14 @@ export default function PromotionModal() {
         >
           ×
         </button>
-        <span className="home-promo-kicker">Только одну неделю</span>
+        <span className="home-promo-kicker">Только до 14 ноября!</span>
         <div className="home-promo-value">−{promotion.discount_percent}%</div>
-        <h2 id="home-promo-title">Скидка для ВСЕХ {promotion.discount_percent}%</h2>
+        <h2 id="home-promo-title">−20% В ЧЁРНУЮ ПЯТНИЦУ ДЛЯ ВСЕХ!</h2>
         <p>
-          Скидка действует на все товары, включая аккаунты. Личная накопительная скидка не
-          сгорает и продолжает расти, но не складывается с акцией — она будет применяться
-          после её окончания.
+          Скидка действует на ВСЁ, включая аккаунты! Твоя накопительная скидка сохраняется и
+          продолжит расти, но применится уже после окончания акции.
         </p>
-        <span className="home-promo-until">
-          До {new Date(promotion.ends_at).toLocaleDateString("ru-RU")}
-        </span>
+        <span className="home-promo-until">до 14.11.2026</span>
         <Link to="/catalog" className="home-promo-action" onClick={dismiss}>
           Выбрать товар
         </Link>

@@ -9,6 +9,8 @@ type Game = {
   slug: string;
   seo_title: string;
   seo_description: string;
+  seo_h1: string;
+  seo_text: string;
   seo_image: string;
   seo_noindex: boolean;
   cover_url: string | null;
@@ -22,6 +24,8 @@ type GameDraft = {
   slug: string;
   seo_title: string;
   seo_description: string;
+  seo_h1: string;
+  seo_text: string;
   seo_image: string;
   seo_noindex: boolean;
   cover_url: string;
@@ -34,6 +38,8 @@ const emptyDraft = (): GameDraft => ({
   slug: "",
   seo_title: "",
   seo_description: "",
+  seo_h1: "",
+  seo_text: "",
   seo_image: "",
   seo_noindex: false,
   cover_url: "",
@@ -176,6 +182,8 @@ export default function AdminGames() {
       slug: game.slug,
       seo_title: game.seo_title || "",
       seo_description: game.seo_description || "",
+      seo_h1: game.seo_h1 || "",
+      seo_text: game.seo_text || "",
       seo_image: game.seo_image || "",
       seo_noindex: game.seo_noindex || false,
       cover_url: game.cover_url || "",
@@ -193,6 +201,8 @@ export default function AdminGames() {
         slug: game.slug,
         seo_title: game.seo_title || "",
         seo_description: game.seo_description || "",
+        seo_h1: game.seo_h1 || "",
+        seo_text: game.seo_text || "",
         seo_image: game.seo_image || "",
         seo_noindex: game.seo_noindex || false,
         cover_url: game.cover_url || "",
@@ -275,6 +285,27 @@ export default function AdminGames() {
             onChange={(event) => updateDraft("seo_description", event.target.value)}
             style={inputStyle}
             placeholder="Пусто — сформировать описание каталога игры"
+          />
+        </label>
+        <label style={{ gridColumn: "1 / -1" }}>
+          <span style={{ display: "block", marginBottom: 6 }}>H1 страницы</span>
+          <input
+            maxLength={255}
+            value={draft.seo_h1}
+            onChange={(event) => updateDraft("seo_h1", event.target.value)}
+            style={inputStyle}
+            placeholder="Пусто — использовать заголовок по умолчанию"
+          />
+        </label>
+        <label style={{ gridColumn: "1 / -1" }}>
+          <span style={{ display: "block", marginBottom: 6 }}>SEO-текст</span>
+          <textarea
+            maxLength={20000}
+            rows={6}
+            value={draft.seo_text}
+            onChange={(event) => updateDraft("seo_text", event.target.value)}
+            style={inputStyle}
+            placeholder="Текстовый блок под каталогом игры; допускается HTML"
           />
         </label>
         <label style={{ gridColumn: "1 / -1" }}>

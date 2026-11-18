@@ -4,6 +4,7 @@ import heroImage from "../static/img/hero.png";
 import { getGameImage } from "../utils/gameCatalog";
 import { applyDiscount, getCheatDiscountPercent } from "../utils/cheatPromotion";
 import Seo from "../components/Seo";
+import { SeoHeading, SeoTextBlock } from "../components/SeoPageContent";
 
 type Game = { 
   id: number; 
@@ -131,7 +132,11 @@ export default function CatalogPage() {
         <div className="catalog-hero">
           <div className="catalog-hero-content">
             <span className="catalog-hero-badge">Ассортимент игр</span>
-            <h1 className="catalog-hero-title">Каталог наших игр</h1>
+            <SeoHeading
+              pageKey="catalog"
+              className="catalog-hero-title"
+              fallback="Каталог наших игр"
+            />
             <p className="catalog-hero-subtitle">Начните пользоваться MILLEX прямо сейчас</p>
             <a href="#games-section" className="catalog-hero-button">Все игры</a>
           </div>
@@ -296,6 +301,13 @@ export default function CatalogPage() {
             )}
           </>
         )}
+      </div>
+      <div className="container">
+        <SeoTextBlock
+          pageKey="catalog"
+          collapsible
+          summary="Описание каталога"
+        />
       </div>
     </div>
   );

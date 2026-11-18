@@ -66,6 +66,7 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     username: str = Field(min_length=3, max_length=32)
     password: str = Field(min_length=8, max_length=256)
+    referral_code: str | None = Field(default=None, min_length=8, max_length=32)
 
 
 class LoginRequest(BaseModel):
@@ -179,6 +180,13 @@ def get_current_user(
 
 @router.post("/register")
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+    referral_code = (payload.referral_code or "").strip().upper()
+    referrer = None
+    if referral_code:
+        referrer = db.query(User).filter(User.referral_code == referral_code).first()
+        if referrer is None:
+            raise HTTPException(status_code=400, detail="Invalid referral code")
+
     existing_user = db.query(User).filter(
         (User.email == payload.email) | (User.username == payload.username)
     ).first()
@@ -193,6 +201,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         balance="0",
         is_active=True,
         is_admin=False,
+        referred_by=referrer.id if referrer else None,
     )
 
     db.add(user)

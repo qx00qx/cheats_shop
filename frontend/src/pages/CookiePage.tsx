@@ -1,4 +1,5 @@
 import Seo from "../components/Seo";
+import { SeoHeading, SeoTextBlock } from "../components/SeoPageContent";
 
 export default function CookiePage() {
   return (
@@ -8,11 +9,16 @@ export default function CookiePage() {
         title="Политика использования cookie"
         description="Информация об использовании файлов cookie на сайте MILLEX."
       />
-      <h1 className="page-title">Использование Cookie</h1>
+      <SeoHeading
+        pageKey="cookie"
+        className="page-title"
+        fallback="Использование Cookie"
+      />
       <p className="muted">
         Мы используем cookie для работы сайта и аналитики. Продолжая пользоваться сайтом, вы
         соглашаетесь с этим.
       </p>
+      <SeoTextBlock pageKey="cookie" />
     </div>
   );
 }

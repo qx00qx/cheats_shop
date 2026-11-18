@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import Seo from "../components/Seo";
+import { SeoTextBlock } from "../components/SeoPageContent";
 import { getGameImage } from "../utils/gameCatalog";
 import { getVideoEmbedUrl, isDirectVideoUrl } from "../utils/media";
 import { applyDiscount, getCheatDiscountPercent } from "../utils/cheatPromotion";
@@ -21,6 +22,7 @@ type GalleryMedia = {
 
 type Item = {
   id: number;
+  sort_order: number;
   name: string;
   alias: string;
   text?: string | null;
@@ -38,9 +40,10 @@ type Item = {
   last_purchase_at?: string | null;
 };
 
-type ItemSort = "newest" | "hit" | "undetected" | "top" | "price-asc" | "price-desc";
+type ItemSort = "manual" | "newest" | "hit" | "undetected" | "top" | "price-asc" | "price-desc";
 
 const itemSortOptions: { value: ItemSort; label: string }[] = [
+  { value: "manual", label: "Порядок витрины" },
   { value: "newest", label: "Сначала новые" },
   { value: "hit", label: "Хит продаж" },
   { value: "undetected", label: "Undetected" },
@@ -80,6 +83,8 @@ type GameResponse = {
     slug: string;
     seo_title?: string | null;
     seo_description?: string | null;
+    seo_h1?: string | null;
+    seo_text?: string | null;
     seo_image?: string | null;
     seo_noindex?: boolean;
     image?: string;
@@ -91,7 +96,7 @@ export default function GamePage() {
   const { slug } = useParams<{ slug: string }>();
   const [data, setData] = useState<GameResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [itemSort, setItemSort] = useState<ItemSort>("newest");
+  const [itemSort, setItemSort] = useState<ItemSort>("manual");
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hoveredVideoItemId, setHoveredVideoItemId] = useState<number | null>(null);
@@ -177,9 +182,11 @@ export default function GamePage() {
 
     return searchableText.includes(normalizedSearch);
   });
-  const sortedItems = itemSort === "newest"
+  const sortedItems = itemSort === "manual"
     ? [...filteredItems]
-    : filteredItems
+    : itemSort === "newest"
+      ? [...filteredItems].sort((left, right) => right.id - left.id)
+      : filteredItems
       .map((item, index) => ({ item, index }))
       .sort((left, right) => {
         if (itemSort === "price-asc" || itemSort === "price-desc") {
@@ -288,7 +295,9 @@ export default function GamePage() {
         </div>
         <div className="game-hero-content">
           <span className="game-hero-badge">Каталог игры</span>
-          <h1 className="game-hero-title">Каталог читов</h1>
+          <h1 className="game-hero-title">
+            {data.game.seo_h1?.trim() || "Каталог читов"}
+          </h1>
           <p className="game-hero-summary">
             Читы на {data.game.title} · {data.items.length} {data.items.length === 1 ? "предложение" : "предложений"}
           </p>
@@ -654,6 +663,11 @@ export default function GamePage() {
         </div>
       )}
       <FaqSection/>
+      <SeoTextBlock
+        content={data.game.seo_text}
+        collapsible
+        summary={`Описание ${data.game.title}`}
+      />
     </div>
   );
 }

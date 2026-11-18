@@ -10,10 +10,12 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 from sqlalchemy import bindparam, func, inspect, text
+from sqlalchemy.dialects.postgresql import insert as postgresql_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from app.database import get_db
 from app.api.deps import get_current_admin
-from app.models import BotOrder, CheatFeatureAssignment, CheatFeatureCategory
+from app.models import BotOrder, CheatFeatureAssignment, CheatFeatureCategory, Key
 from app.services.cheat_promotion import (
     cheat_promotion_payload,
     cheat_promotion_public_fields,
@@ -82,8 +84,11 @@ class CheatFeatureCategoryInput(BaseModel):
 class LegacyItemCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=1000)
     alias: str = Field(..., min_length=1, max_length=255, pattern=r"^[a-z0-9_-]+$")
+    sort_order: int = Field(default=999, ge=0, le=1000000)
     seo_title: str | None = Field(default=None, max_length=255)
     seo_description: str | None = Field(default=None, max_length=500)
+    seo_h1: str | None = Field(default=None, max_length=255)
+    seo_text: str | None = Field(default=None, max_length=20000)
     seo_image: str | None = Field(default=None, max_length=2000)
     seo_noindex: bool = False
     game_id: int = Field(..., gt=0)
@@ -177,6 +182,8 @@ class AdminGameInput(BaseModel):
     slug: str = Field(..., min_length=1, max_length=255, pattern=r"^[a-z0-9_-]+$")
     seo_title: str | None = Field(default=None, max_length=255)
     seo_description: str | None = Field(default=None, max_length=500)
+    seo_h1: str | None = Field(default=None, max_length=255)
+    seo_text: str | None = Field(default=None, max_length=20000)
     seo_image: str | None = Field(default=None, max_length=2000)
     seo_noindex: bool = False
     cover_url: str | None = Field(default=None, max_length=2000)
@@ -195,6 +202,10 @@ class ItemVisibilityInput(BaseModel):
 
 class ItemSecurityStatusInput(BaseModel):
     security_status: int = Field(..., ge=1, le=3)
+
+
+class ItemKeysUploadInput(BaseModel):
+    keys: str = Field(..., min_length=1, max_length=500000)
 
 
 def serialize_legacy_prices(tariffs: list[LegacyTariffInput]) -> str:
@@ -369,6 +380,8 @@ def get_games(db: Session = Depends(get_db)):
             c.images_characters AS image,
             c.seo_title,
             c.seo_description,
+            c.seo_h1,
+            c.seo_text,
             c.seo_image,
             c.seo_noindex,
             COUNT(i.id)::integer AS product_count,
@@ -380,7 +393,8 @@ def get_games(db: Session = Depends(get_db)):
          AND COALESCE(i.vis, 1) = 1
         WHERE c.vis = 1 AND c.parent = 0
         GROUP BY c.id, c.name, c.alias, c.images_characters, c.seo_title,
-                 c.seo_description, c.seo_image, c.seo_noindex, c.posled
+                 c.seo_description, c.seo_h1, c.seo_text, c.seo_image,
+                 c.seo_noindex, c.posled
         ORDER BY c.posled, c.id
     """)).mappings().all()
 
@@ -415,7 +429,7 @@ def search_catalog(
               OR COALESCE(i.text, '') ILIKE :pattern
               OR COALESCE(c.name, '') ILIKE :pattern
           )
-        ORDER BY i.id DESC
+        ORDER BY COALESCE(i.sort_order, 999), i.id DESC
         LIMIT 8
     """), {"pattern": f"%{query}%"}).mappings().all()
     return [
@@ -518,7 +532,7 @@ def get_cheat_statuses(db: Session = Depends(get_db)):
 def get_game_items(slug: str, db: Session = Depends(get_db)):
     game = db.execute(text("""
         SELECT id, name AS title, alias AS slug, images_characters AS image,
-               seo_title, seo_description, seo_image, seo_noindex
+               seo_title, seo_description, seo_h1, seo_text, seo_image, seo_noindex
         FROM categories
         WHERE alias = :slug AND vis = 1
         LIMIT 1
@@ -534,8 +548,11 @@ def get_game_items(slug: str, db: Session = Depends(get_db)):
             alias,
             seo_title,
             seo_description,
+            seo_h1,
+            seo_text,
             seo_image,
             seo_noindex,
+            COALESCE(sort_order, 999) AS sort_order,
             text,
             tabs,
             status,
@@ -556,7 +573,7 @@ def get_game_items(slug: str, db: Session = Depends(get_db)):
         WHERE substring("categoryData" from '"id"\\s*:\\s*([0-9]+)') = CAST(:cid AS TEXT)
           AND status = 1
           AND COALESCE(vis, 1) = 1
-        ORDER BY id DESC
+        ORDER BY COALESCE(sort_order, 999), id DESC
     """), {"cid": game["id"]}).mappings().all()
     feature_categories = _feature_assignments_by_item(
         db,
@@ -755,7 +772,7 @@ def get_home_items(db: Session = Depends(get_db)):
         WHERE i.status = 1
           AND COALESCE(i.vis, 1) = 1
           AND COALESCE(i.home, 0) = 1
-        ORDER BY i.id DESC
+        ORDER BY COALESCE(i.sort_order, 999), i.id DESC
     """)).mappings().all()
     assignments = _feature_assignments_by_item(
         db,
@@ -832,6 +849,8 @@ def get_item(alias: str, db: Session = Depends(get_db)):
             alias,
             seo_title,
             seo_description,
+            seo_h1,
+            seo_text,
             seo_image,
             seo_noindex,
             text,
@@ -892,7 +911,7 @@ def get_item(alias: str, db: Session = Depends(get_db)):
 def list_categories(db: Session = Depends(get_db)):
     rows = db.execute(text("""
         SELECT id, alias AS slug, name AS title,
-               seo_title, seo_description
+               seo_title, seo_description, seo_h1, seo_text
         FROM categories
         WHERE vis = 1 AND parent = 0
         ORDER BY posled, id
@@ -911,6 +930,8 @@ def list_admin_games(
                COALESCE(vis, 0) = 1 AS is_active,
                COALESCE(seo_title, '') AS seo_title,
                COALESCE(seo_description, '') AS seo_description,
+               COALESCE(seo_h1, '') AS seo_h1,
+               COALESCE(seo_text, '') AS seo_text,
                COALESCE(seo_image, '') AS seo_image,
                COALESCE(seo_noindex, FALSE) AS seo_noindex
         FROM categories
@@ -955,16 +976,18 @@ def create_admin_game(
     row = db.execute(text("""
         INSERT INTO categories (
             name, alias, images_characters, parent, vis, posled,
-            seo_title, seo_description, seo_image, seo_noindex
+            seo_title, seo_description, seo_h1, seo_text, seo_image, seo_noindex
         )
         VALUES (
             :title, :slug, :cover_url, 0, :is_active, :sort_order,
-            :seo_title, :seo_description, :seo_image, :seo_noindex
+            :seo_title, :seo_description, :seo_h1, :seo_text, :seo_image, :seo_noindex
         )
         RETURNING id, name AS title, alias AS slug, images_characters AS cover_url,
                   posled AS sort_order, (vis = 1) AS is_active,
                   COALESCE(seo_title, '') AS seo_title,
                   COALESCE(seo_description, '') AS seo_description,
+                  COALESCE(seo_h1, '') AS seo_h1,
+                  COALESCE(seo_text, '') AS seo_text,
                   COALESCE(seo_image, '') AS seo_image,
                   COALESCE(seo_noindex, FALSE) AS seo_noindex
     """), {
@@ -1001,6 +1024,8 @@ def update_admin_game(
             vis = :is_active,
             seo_title = :seo_title,
             seo_description = :seo_description,
+            seo_h1 = :seo_h1,
+            seo_text = :seo_text,
             seo_image = :seo_image,
             seo_noindex = :seo_noindex
         WHERE id = :game_id AND parent = 0
@@ -1008,6 +1033,8 @@ def update_admin_game(
                   posled AS sort_order, (vis = 1) AS is_active,
                   COALESCE(seo_title, '') AS seo_title,
                   COALESCE(seo_description, '') AS seo_description,
+                  COALESCE(seo_h1, '') AS seo_h1,
+                  COALESCE(seo_text, '') AS seo_text,
                   COALESCE(seo_image, '') AS seo_image,
                   COALESCE(seo_noindex, FALSE) AS seo_noindex
     """), {
@@ -1033,8 +1060,11 @@ def list_admin_items(
             i.id, COALESCE(i.name, '') AS name, COALESCE(i.alias, '') AS alias,
             COALESCE(i.seo_title, '') AS seo_title,
             COALESCE(i.seo_description, '') AS seo_description,
+            COALESCE(i.seo_h1, '') AS seo_h1,
+            COALESCE(i.seo_text, '') AS seo_text,
             COALESCE(i.seo_image, '') AS seo_image,
             COALESCE(i.seo_noindex, FALSE) AS seo_noindex,
+            COALESCE(i.sort_order, 999) AS sort_order,
             COALESCE(i.systems, '') AS systems, COALESCE(i.text, '') AS text,
             COALESCE(i.instruction, '') AS instruction,
             COALESCE(i.instruction_link, '') AS instruction_link,
@@ -1068,7 +1098,7 @@ def list_admin_items(
         FROM items i
         LEFT JOIN categories c
           ON substring(i."categoryData" from '"id"\\s*:\\s*([0-9]+)') = c.id::text
-        ORDER BY i.id DESC
+        ORDER BY COALESCE(i.sort_order, 999), i.id DESC
     """)).mappings().all()
     items = []
     for row in rows:
@@ -1096,6 +1126,97 @@ def list_admin_items(
     for item in items:
         item["feature_categories"] = assignments.get(item["id"], [])
     return items
+
+
+@router.get("/admin/items/{item_id}/keys")
+def get_admin_item_keys(
+    item_id: int,
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
+    item = db.execute(text(
+        "SELECT alias FROM items WHERE id = :item_id"
+    ), {"item_id": item_id}).first()
+    if item is None:
+        raise HTTPException(404, "Item not found")
+
+    counts = dict(db.query(
+        Key.status,
+        func.count(Key.id),
+    ).filter(
+        Key.item_alias == item.alias,
+    ).group_by(Key.status).all())
+    return {
+        "item_id": item_id,
+        "item_alias": item.alias,
+        "available": counts.get("free", 0),
+        "used": counts.get("used", 0),
+    }
+
+
+@router.post("/admin/items/{item_id}/keys")
+def upload_admin_item_keys(
+    item_id: int,
+    payload: ItemKeysUploadInput,
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
+    item = db.execute(text(
+        "SELECT alias FROM items WHERE id = :item_id"
+    ), {"item_id": item_id}).first()
+    if item is None:
+        raise HTTPException(404, "Item not found")
+
+    lines = [line.strip() for line in payload.keys.splitlines() if line.strip()]
+    if not lines:
+        raise HTTPException(422, "Добавьте хотя бы один ключ")
+    if len(lines) > 5000:
+        raise HTTPException(422, "За один раз можно загрузить не более 5000 ключей")
+    if any(
+        len(value) > 2048
+        or any(ord(char) < 32 or ord(char) == 127 for char in value)
+        for value in lines
+    ):
+        raise HTTPException(
+            422,
+            "Ключ не может быть длиннее 2048 символов или содержать управляющие символы",
+        )
+
+    dialect = db.get_bind().dialect.name
+    insert_statement = {
+        "postgresql": postgresql_insert,
+        "sqlite": sqlite_insert,
+    }.get(dialect)
+    if insert_statement is None:
+        raise HTTPException(501, "Key upload is not supported by this database")
+
+    unique_keys = list(dict.fromkeys(lines))
+    added = 0
+    for offset in range(0, len(unique_keys), 500):
+        batch = unique_keys[offset:offset + 500]
+        result = db.execute(
+            insert_statement(Key).values([
+                {
+                    "item_alias": item.alias,
+                    "key_value": value,
+                    "status": "free",
+                }
+                for value in batch
+            ]).on_conflict_do_nothing(index_elements=[Key.key_value])
+        )
+        added += result.rowcount
+    db.commit()
+
+    available = db.query(func.count(Key.id)).filter(
+        Key.item_alias == item.alias,
+        Key.status == "free",
+    ).scalar()
+    return {
+        "item_id": item_id,
+        "added": added,
+        "duplicates": len(lines) - added,
+        "available": available,
+    }
 
 
 @router.patch("/admin/items/{item_id}/visibility")
@@ -1191,6 +1312,7 @@ def update_admin_item(
         UPDATE items SET
             "categoryData" = :category_data,
             name = :name, alias = :alias, systems = :systems, text = :text,
+            sort_order = :sort_order,
             instruction = :instruction, instruction_link = :instruction_link,
             advantages = :advantages, keys_text = :keys_text, preview = :preview,
             gallery = CAST(:gallery AS jsonb),
@@ -1210,6 +1332,7 @@ def update_admin_item(
             visuals_title = :visuals_title, visuals = :visuals, visuals_desc = :visuals_desc,
             visuals_en_title = :visuals_en_title, visuals_en_desc = :visuals_en_desc,
             seo_title = :seo_title, seo_description = :seo_description,
+            seo_h1 = :seo_h1, seo_text = :seo_text,
             seo_image = :seo_image, seo_noindex = :seo_noindex
         WHERE id = :item_id
         RETURNING id, name, alias, status, vis
@@ -1261,26 +1384,28 @@ def create_legacy_item(
     result = db.execute(text("""
         INSERT INTO items (
             "categoryData", name, alias, tabs, prices, systems, text,
+            sort_order,
             instruction, instruction_link, advantages, keys_text, preview,
             gallery, characteristics, platforms, video, status, vis, price,
             home, top, hit, undetected, security_status, win10, win11, amd, intel,
             esp_title, esp, esp_desc, aimbot_title, aimbot, aimbot_desc,
             misc_title, misc, misc_desc, loot_title, loot, loot_desc,
             visuals_title, visuals, visuals_desc, seo_title, seo_description,
-            seo_image, seo_noindex,
+            seo_h1, seo_text, seo_image, seo_noindex,
             esp_en_title, esp_en_desc, aimbot_en_title, aimbot_en_desc,
             misc_en_title, misc_en_desc, loot_en_title, loot_en_desc,
             visuals_en_title, visuals_en_desc
         )
         VALUES (
             :category_data, :name, :alias, :tabs, :prices, :systems, :item_text,
+            :sort_order,
             :instruction, :instruction_link, :advantages, :keys_text, :preview,
             CAST(:gallery AS jsonb), :characteristics, :platforms, :video, :status, :vis, :min_price,
             :home, :top, :hit, :undetected, :security_status, :win10, :win11, :amd, :intel,
             :esp_title, :esp, :esp_desc, :aimbot_title, :aimbot, :aimbot_desc,
             :misc_title, :misc, :misc_desc, :loot_title, :loot, :loot_desc,
             :visuals_title, :visuals, :visuals_desc, :seo_title, :seo_description,
-            :seo_image, :seo_noindex,
+            :seo_h1, :seo_text, :seo_image, :seo_noindex,
             :esp_en_title, :esp_en_desc, :aimbot_en_title, :aimbot_en_desc,
             :misc_en_title, :misc_en_desc, :loot_en_title, :loot_en_desc,
             :visuals_en_title, :visuals_en_desc
@@ -1290,8 +1415,11 @@ def create_legacy_item(
         "category_data": category_data,
         "name": payload.name,
         "alias": payload.alias,
+        "sort_order": payload.sort_order,
         "seo_title": payload.seo_title,
         "seo_description": payload.seo_description,
+        "seo_h1": payload.seo_h1,
+        "seo_text": payload.seo_text,
         "seo_image": payload.seo_image,
         "seo_noindex": payload.seo_noindex,
         "tabs": tabs,

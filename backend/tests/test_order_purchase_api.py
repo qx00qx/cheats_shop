@@ -9,7 +9,16 @@ from app.api.deps import get_current_user
 from app.api.routes import orders as orders_route
 from app.database import Base, get_db
 from app.main import app
-from app.models import Game, Key, Product, ProductPlan, User, Order, BotOrder
+from app.models import (
+    BotOrder,
+    Game,
+    Key,
+    Order,
+    Product,
+    ProductPlan,
+    ReferralEarning,
+    User,
+)
 import app.services.order_delivery as delivery_service
 
 
@@ -52,6 +61,7 @@ def make_order_client(monkeypatch, *, with_stock_key):
     previous = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = override_db
     app.dependency_overrides[get_current_user] = lambda: SimpleNamespace(id=user_id)
+    monkeypatch.setattr(orders_route, "get_promotion_start", lambda _db: None)
     monkeypatch.setattr(orders_route.settings, "SMTP_HOST", "smtp.example.test")
     monkeypatch.setattr(orders_route.settings, "SMTP_FROM_EMAIL", "shop@example.test")
     monkeypatch.setattr(
@@ -92,6 +102,45 @@ def test_balance_purchase_assigns_key_and_increases_discount(monkeypatch):
             assert order.email_sent_at is None
             assert stock_key.status == "used"
             assert db.query(BotOrder).count() == 0
+    finally:
+        client.close()
+        app.dependency_overrides.clear()
+        app.dependency_overrides.update(previous)
+        engine.dispose()
+
+
+def test_balance_purchase_credits_referrer_once(monkeypatch):
+    engine, session_factory, client, previous, product_id, plan_id, user_id = (
+        make_order_client(monkeypatch, with_stock_key=True)
+    )
+    try:
+        with session_factory() as db:
+            referrer = User(
+                email="referrer@example.test",
+                username="referrer",
+                password_hash="hash",
+                balance="0",
+            )
+            db.add(referrer)
+            db.flush()
+            buyer = db.get(User, user_id)
+            buyer.referred_by = referrer.id
+            referrer_id = referrer.id
+            db.commit()
+
+        response = client.post("/api/orders", json={
+            "items": [{"product_id": product_id, "plan_id": plan_id, "qty": 1}],
+            "payment_method": "balance",
+        })
+
+        assert response.status_code == 201
+        with session_factory() as db:
+            referrer = db.get(User, referrer_id)
+            earning = db.query(ReferralEarning).one()
+            assert referrer.balance == "5.00"
+            assert earning.sale_amount == 100
+            assert earning.commission_amount == 5
+            assert earning.source_type == "store_order"
     finally:
         client.close()
         app.dependency_overrides.clear()

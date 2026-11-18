@@ -1,5 +1,6 @@
 import React from "react";
 import Seo from "../components/Seo";
+import { SeoHeading, SeoTextBlock } from "../components/SeoPageContent";
 
 const sections = [
   {
@@ -103,9 +104,11 @@ export default function UserAgreement() {
         </nav>
 
         <section className="policy-card">
-          <h1 className="policy-title">
-            ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ
-          </h1>
+          <SeoHeading
+            pageKey="user-agreement"
+            className="policy-title"
+            fallback="ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ"
+          />
 
           <p className="policy-intro">
             Дата обновления: 18 октября 2026 г.
@@ -133,6 +136,7 @@ export default function UserAgreement() {
             С уважением, millex.market.
           </p>
         </section>
+        <SeoTextBlock pageKey="user-agreement" />
       </div>
     </main>
   );

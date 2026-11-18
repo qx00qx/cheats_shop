@@ -31,5 +31,7 @@ class BlogArticleOut(BlogArticleListItem):
     updated_at: str | None = None
     seo_title: str | None = None
     seo_description: str | None = None
+    seo_h1: str | None = None
+    seo_text: str | None = None
     seo_image: str | None = None
     seo_noindex: bool = False

@@ -40,6 +40,7 @@ LEGACY_ITEM_COLUMNS = {
     "categoryData": "TEXT",
     "name": "VARCHAR(1000)",
     "alias": "VARCHAR(255)",
+    "sort_order": "INTEGER NOT NULL DEFAULT 999",
     "status": "INTEGER",
     "tabs": "TEXT",
     "keys_text": "TEXT",

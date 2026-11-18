@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import heroImg from "../static/img/hero.png";
 import FaqSection from "../components/faqsection/FaqSection";
 import Seo from "../components/Seo";
+import { SeoHeading, SeoTextBlock } from "../components/SeoPageContent";
 import TrustBlock from "../components/TrustBlock";
 import { applyDiscount, getCheatDiscountPercent, type CheatPromotion } from "../utils/cheatPromotion";
 import { getMockItemSales } from "../utils/itemSalesMock";
@@ -239,9 +240,11 @@ export default function HomePage() {
               <i></i>
               <span>Market</span>
             </div>
-            <h1 className="newhome-hero-title">
-              ВАШИ ПОБЕДЫ НАЧИНАЮТСЯ ЗДЕСЬ
-            </h1>
+            <SeoHeading
+              pageKey="home"
+              className="newhome-hero-title"
+              fallback="ВАШИ ПОБЕДЫ НАЧИНАЮТСЯ ЗДЕСЬ"
+            />
             <p className="newhome-hero-text">
               Маркетплейс уникальных читов для улучшения ваших результатов в играх.
               Безопасные, проверенные и эффективные решения от лучших разработчиков.
@@ -608,6 +611,7 @@ export default function HomePage() {
         </section>
 
         <FaqSection />
+        <SeoTextBlock pageKey="home" />
       </main>
     </div>
   );

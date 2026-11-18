@@ -14,6 +14,7 @@ from app.services.order_delivery import (
     fulfill_store_order,
 )
 from app.services.user_discount import increase_user_discount
+from app.services.referrals import award_referral_commission
 from app.services.cheat_promotion import (
     discounted_cheat_price,
     effective_cheat_discount_percent,
@@ -100,6 +101,13 @@ async def create_order(
         order.paid_at = datetime.now(timezone.utc)
         increase_user_discount(locked_user)
         fulfill_store_order(db, order, locked_user)
+        award_referral_commission(
+            db,
+            buyer=locked_user,
+            sale_amount=Decimal(str(order.total)),
+            source_type="store_order",
+            source_id=order.id,
+        )
         db.add(BalanceAudit.for_balance_change(
             user_id=locked_user.id,
             old_balance=old,

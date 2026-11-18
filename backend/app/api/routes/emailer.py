@@ -1,14 +1,19 @@
 import logging
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy import func, update
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import SessionLocal, get_db
 from app.models import Emailer, User
-from app.schemas.emailer import EmailerCreate, EmailerOut, EmailerStatus
+from app.schemas.emailer import (
+    EmailerCreate,
+    EmailerOut,
+    EmailerStatus,
+    EmailRecipient,
+)
 from app.api.deps import get_current_admin
 from app.services.unisender_go import (
     MAX_RECIPIENTS_PER_REQUEST,
@@ -31,6 +36,34 @@ def _user_emails(db: Session) -> list[str]:
     for (address,) in addresses:
         if address and address.strip():
             unique_addresses.setdefault(address.strip().casefold(), address.strip())
+    return list(unique_addresses.values())
+
+
+def _selected_user_emails(db: Session, user_ids: list[int]) -> list[str]:
+    users = (
+        db.query(User.id, User.email)
+        .filter(User.id.in_(user_ids))
+        .order_by(User.id)
+        .all()
+    )
+    users_by_id = {user_id: email for user_id, email in users}
+    missing_ids = set(user_ids) - users_by_id.keys()
+    if missing_ids:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "One or more selected users no longer exist.",
+        )
+
+    unique_addresses: dict[str, str] = {}
+    for user_id in sorted(user_ids):
+        address = users_by_id[user_id]
+        if address and address.strip():
+            unique_addresses.setdefault(address.strip().casefold(), address.strip())
+    if not unique_addresses:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "Selected users do not have email addresses.",
+        )
     return list(unique_addresses.values())
 
 
@@ -124,6 +157,32 @@ def get_emailer_status(
     )
 
 
+@router.get("/recipients", response_model=list[EmailRecipient])
+def search_recipients(
+    search: str = Query(default="", max_length=100),
+    limit: int = Query(default=50, ge=1, le=100),
+    db: Session = Depends(get_db),
+    admin=Depends(get_current_admin),
+):
+    query = db.query(User.id, User.username, User.email).filter(
+        User.email.is_not(None),
+        func.trim(User.email) != "",
+    )
+    normalized_search = search.strip()
+    if normalized_search:
+        pattern = f"%{normalized_search}%"
+        query = query.filter(
+            User.email.ilike(pattern) | User.username.ilike(pattern)
+        )
+    return [
+        {"id": user_id, "username": username, "email": email}
+        for user_id, username, email in query.order_by(
+            User.username,
+            User.id,
+        ).limit(limit).all()
+    ]
+
+
 @router.get("/{emailer_id}", response_model=EmailerOut)
 def get_emailer(
     emailer_id: int,
@@ -142,7 +201,22 @@ def create_emailer(
     db: Session = Depends(get_db),
     admin = Depends(get_current_admin),
 ):
-    emailer = Emailer(**payload.model_dump())
+    values = payload.model_dump(
+        exclude={"recipient_mode", "recipient_ids"},
+    )
+    if payload.recipient_mode == "selected":
+        values["to_email"] = None
+        values["recipient_emails"] = _selected_user_emails(
+            db,
+            payload.recipient_ids,
+        )
+    elif payload.recipient_mode == "all":
+        values["to_email"] = None
+        values["recipient_emails"] = []
+    else:
+        values["recipient_emails"] = []
+
+    emailer = Emailer(**values)
     emailer.send_status = "draft"
     db.add(emailer)
     db.commit()
@@ -175,7 +249,7 @@ def send_emailer(
     recipients = (
         [emailer.to_email]
         if emailer.to_email
-        else _user_emails(db)
+        else emailer.recipient_emails or _user_emails(db)
     )
     if not recipients:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "No user email addresses found.")

@@ -9,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 from app.api.deps import get_current_admin
 from app.database import Base, get_db
 from app.main import app
+from app.models import Key
 
 
 def make_status_client():
@@ -133,6 +134,55 @@ def test_admin_can_update_item_security_status_and_undetected_flag():
             json={"security_status": 3},
         )
         assert missing_item.status_code == 404
+    finally:
+        client.close()
+        app.dependency_overrides.clear()
+        app.dependency_overrides.update(previous)
+        engine.dispose()
+
+
+def test_admin_can_upload_keys_and_view_inventory_without_exposing_keys():
+    engine, session_factory, client, previous = make_status_client()
+    app.dependency_overrides[get_current_admin] = lambda: SimpleNamespace(id=91)
+    try:
+        with engine.begin() as connection:
+            connection.execute(text("""
+                INSERT INTO items (id, name, alias, status, vis, security_status, "categoryData")
+                VALUES (1, 'Test Cheat', 'test-cheat', 1, 1, 2, '{}')
+            """))
+        with session_factory() as db:
+            db.add(Key(item_alias="test-cheat", key_value="EXISTING-KEY", status="free"))
+            db.commit()
+
+        response = client.post(
+            "/api/catalog/admin/items/1/keys",
+            json={"keys": "EXISTING-KEY\nNEW-KEY-1\nNEW-KEY-1\nNEW-KEY-2\n"},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "item_id": 1,
+            "added": 2,
+            "duplicates": 2,
+            "available": 3,
+        }
+
+        inventory = client.get("/api/catalog/admin/items/1/keys")
+        assert inventory.status_code == 200
+        assert inventory.json() == {
+            "item_id": 1,
+            "item_alias": "test-cheat",
+            "available": 3,
+            "used": 0,
+        }
+        with session_factory() as db:
+            assert db.query(Key).count() == 3
+
+        invalid = client.post(
+            "/api/catalog/admin/items/1/keys",
+            json={"keys": " \n\n "},
+        )
+        assert invalid.status_code == 422
     finally:
         client.close()
         app.dependency_overrides.clear()

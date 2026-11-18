@@ -1,13 +1,16 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect, text
 import logging
+from redis.exceptions import RedisError
 
 from app.config import settings
 from app.database import Base, engine
 from app import models
-from app.api.routes import accounting, auth, catalog, products, orders, payments, reviews, blog, emailer, accounts, admin, homepage, uploads, feature_categories, seo
+from app.api.routes import accounting, auth, catalog, products, orders, payments, reviews, blog, emailer, accounts, admin, homepage, uploads, feature_categories, seo, referrals
+from app.services.registration_rate_limit import check_registration_rate_limit, close_registration_rate_limiter
 from app.storage import UPLOADS_DIR
 
 logger = logging.getLogger(__name__)
@@ -22,6 +25,39 @@ try:
     with engine.begin() as conn:
         conn.execute(text("SELECT pg_advisory_xact_lock(741205190)"))
         Base.metadata.create_all(bind=conn)
+        # Keep lock order aligned with the bot's balance_topups -> users join.
+        if inspect(conn).has_table("balance_topups"):
+            conn.execute(text("""
+                ALTER TABLE balance_topups
+                ADD COLUMN IF NOT EXISTS reference VARCHAR(64),
+                ADD COLUMN IF NOT EXISTS expected_payment_amount NUMERIC(12, 2),
+                ADD COLUMN IF NOT EXISTS notification_sent_at TIMESTAMPTZ
+            """))
+            conn.execute(text("""
+                ALTER TABLE balance_topups
+                ADD COLUMN IF NOT EXISTS request_notification_sent_at TIMESTAMPTZ DEFAULT now()
+            """))
+            conn.execute(text("""
+                ALTER TABLE balance_topups
+                ALTER COLUMN request_notification_sent_at DROP DEFAULT
+            """))
+            conn.execute(text("""
+                ALTER TABLE balance_topups
+                ALTER COLUMN transaction_id DROP NOT NULL
+            """))
+            conn.execute(text("""
+                CREATE UNIQUE INDEX IF NOT EXISTS ix_balance_topups_reference
+                ON balance_topups (reference)
+            """))
+            conn.execute(text("""
+                CREATE UNIQUE INDEX IF NOT EXISTS ix_balance_topups_transaction_id
+                ON balance_topups (transaction_id)
+            """))
+        conn.execute(text("""
+            ALTER TABLE seo_pages
+            ADD COLUMN IF NOT EXISTS h1 VARCHAR(255) NOT NULL DEFAULT '',
+            ADD COLUMN IF NOT EXISTS seo_text TEXT NOT NULL DEFAULT ''
+        """))
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS global_promotions (
                 campaign_key VARCHAR(64) PRIMARY KEY,
@@ -36,12 +72,23 @@ try:
         conn.execute(text("""
             ALTER TABLE users
             ADD COLUMN IF NOT EXISTS discount_percent INTEGER NOT NULL DEFAULT 0,
-            ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0
+            ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS referral_code VARCHAR(32),
+            ADD COLUMN IF NOT EXISTS referred_by INTEGER REFERENCES users(id) ON DELETE SET NULL
+        """))
+        conn.execute(text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS ix_users_referral_code
+            ON users (referral_code)
+        """))
+        conn.execute(text("""
+            CREATE INDEX IF NOT EXISTS ix_users_referred_by
+            ON users (referred_by)
         """))
         conn.execute(text("""
             ALTER TABLE emailer
             ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             ADD COLUMN IF NOT EXISTS last_send TIMESTAMPTZ,
+            ADD COLUMN IF NOT EXISTS recipient_emails JSONB NOT NULL DEFAULT '[]'::jsonb,
             ALTER COLUMN to_email DROP NOT NULL,
             ADD COLUMN IF NOT EXISTS is_sent BOOLEAN NOT NULL DEFAULT FALSE,
             ADD COLUMN IF NOT EXISTS send_status VARCHAR(16) NOT NULL DEFAULT 'draft',
@@ -160,41 +207,17 @@ try:
             CREATE INDEX IF NOT EXISTS ix_bot_orders_platega_tx_id
             ON bot_orders (platega_tx_id)
         """))
-        if inspect(conn).has_table("balance_topups"):
-            conn.execute(text("""
-                ALTER TABLE balance_topups
-                ADD COLUMN IF NOT EXISTS reference VARCHAR(64),
-                ADD COLUMN IF NOT EXISTS expected_payment_amount NUMERIC(12, 2),
-                ADD COLUMN IF NOT EXISTS notification_sent_at TIMESTAMPTZ
-            """))
-            conn.execute(text("""
-                ALTER TABLE balance_topups
-                ADD COLUMN IF NOT EXISTS request_notification_sent_at TIMESTAMPTZ DEFAULT now()
-            """))
-            conn.execute(text("""
-                ALTER TABLE balance_topups
-                ALTER COLUMN request_notification_sent_at DROP DEFAULT
-            """))
-            conn.execute(text("""
-                ALTER TABLE balance_topups
-                ALTER COLUMN transaction_id DROP NOT NULL
-            """))
-            conn.execute(text("""
-                CREATE UNIQUE INDEX IF NOT EXISTS ix_balance_topups_reference
-                ON balance_topups (reference)
-            """))
-            conn.execute(text("""
-                CREATE UNIQUE INDEX IF NOT EXISTS ix_balance_topups_transaction_id
-                ON balance_topups (transaction_id)
-            """))
         if inspect(conn).has_table("items"):
             conn.execute(text("""
                 ALTER TABLE items
                 ADD COLUMN IF NOT EXISTS gallery JSONB,
                 ADD COLUMN IF NOT EXISTS seo_title VARCHAR(255),
                 ADD COLUMN IF NOT EXISTS seo_description TEXT,
+                ADD COLUMN IF NOT EXISTS seo_h1 VARCHAR(255),
+                ADD COLUMN IF NOT EXISTS seo_text TEXT,
                 ADD COLUMN IF NOT EXISTS seo_image TEXT,
-                ADD COLUMN IF NOT EXISTS seo_noindex BOOLEAN NOT NULL DEFAULT FALSE
+                ADD COLUMN IF NOT EXISTS seo_noindex BOOLEAN NOT NULL DEFAULT FALSE,
+                ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 999
             """))
             conn.execute(text("""
                 ALTER TABLE items
@@ -238,6 +261,8 @@ try:
                 ALTER TABLE categories
                 ADD COLUMN IF NOT EXISTS seo_title VARCHAR(255),
                 ADD COLUMN IF NOT EXISTS seo_description TEXT,
+                ADD COLUMN IF NOT EXISTS seo_h1 VARCHAR(255),
+                ADD COLUMN IF NOT EXISTS seo_text TEXT,
                 ADD COLUMN IF NOT EXISTS seo_image TEXT,
                 ADD COLUMN IF NOT EXISTS seo_noindex BOOLEAN NOT NULL DEFAULT FALSE
             """))
@@ -245,6 +270,8 @@ try:
             conn.execute(text("""
                 ALTER TABLE blog
                 ADD COLUMN IF NOT EXISTS seo_image TEXT,
+                ADD COLUMN IF NOT EXISTS seo_h1 VARCHAR(255),
+                ADD COLUMN IF NOT EXISTS seo_text TEXT,
                 ADD COLUMN IF NOT EXISTS seo_noindex BOOLEAN NOT NULL DEFAULT FALSE
             """))
     print("Tables created successfully")
@@ -260,13 +287,51 @@ logger.info(
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
+CORS_ALLOWED_ORIGINS = {
+    origin.strip()
+    for origin in settings.CORS_ORIGINS.split(",")
+    if origin.strip()
+}
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()],
+    allow_origins=list(CORS_ALLOWED_ORIGINS),
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def rate_limit_registration(request: Request, call_next):
+    if request.method == "POST" and request.url.path.rstrip("/") == "/api/auth/register":
+        client_address = request.headers.get("x-real-ip")
+        if not client_address and request.client:
+            client_address = request.client.host
+        client_address = (client_address or "unknown").split(",", 1)[0].strip()
+        origin = request.headers.get("origin")
+        cors_headers = (
+            {"Access-Control-Allow-Origin": origin, "Vary": "Origin"}
+            if origin in CORS_ALLOWED_ORIGINS
+            else {}
+        )
+        try:
+            allowed, retry_after = await check_registration_rate_limit(client_address)
+        except RedisError:
+            logger.exception("Registration rate limiter is unavailable")
+            return JSONResponse(
+                status_code=503,
+                content={"detail": "Регистрация временно недоступна. Попробуйте позже."},
+                headers=cors_headers,
+            )
+        if not allowed:
+            cors_headers["Retry-After"] = str(retry_after)
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Слишком много попыток регистрации. Попробуйте позже."},
+                headers=cors_headers,
+            )
+    return await call_next(request)
 
 app.include_router(auth.router)
 app.include_router(catalog.router)
@@ -283,6 +348,12 @@ app.include_router(homepage.router)
 app.include_router(uploads.router)
 app.include_router(feature_categories.router)
 app.include_router(seo.router)
+app.include_router(referrals.router)
+
+
+@app.on_event("shutdown")
+async def close_rate_limiter():
+    await close_registration_rate_limiter()
 
 
 @app.get("/api/health")

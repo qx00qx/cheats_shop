@@ -3,11 +3,9 @@ import { useLocation } from "react-router-dom";
 import {
   DEFAULT_SEO_SETTINGS,
   getCachedSeoSettings,
-  getCachedSeoPage,
-  loadSeoPage,
   loadSeoSettings,
-  type SeoPageSettings,
   type SeoSettings,
+  useSeoPage,
 } from "../utils/seoSettings";
 
 const SITE_URL = "https://millex.market";
@@ -49,9 +47,7 @@ export default function Seo({
 }: SeoProps) {
   const location = useLocation();
   const [settings, setSettings] = useState<SeoSettings>(getCachedSeoSettings);
-  const [pageSettings, setPageSettings] = useState<SeoPageSettings | null>(
-    () => pageKey ? getCachedSeoPage(pageKey) : null,
-  );
+  const pageSettings = useSeoPage(pageKey ?? null);
   const structuredDataJson = structuredData
     ? JSON.stringify(structuredData)
     : "";
@@ -69,23 +65,6 @@ export default function Seo({
       active = false;
     };
   }, []);
-
-  useEffect(() => {
-    let active = true;
-    setPageSettings(pageKey ? getCachedSeoPage(pageKey) : null);
-    if (!pageKey) return;
-
-    loadSeoPage(pageKey)
-      .then((loadedPage) => {
-        if (active) setPageSettings(loadedPage);
-      })
-      .catch((error: unknown) => {
-        console.error(`Failed to load SEO settings for page "${pageKey}":`, error);
-      });
-    return () => {
-      active = false;
-    };
-  }, [pageKey]);
 
   useEffect(() => {
     const isHomePage = location.pathname === "/";

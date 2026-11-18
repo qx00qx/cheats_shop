@@ -15,6 +15,7 @@ from app.database import get_db
 from app.models import BalanceAudit, BotOrder, User
 from app.services.nfa import NfaConfigurationError, nfa
 from app.services.user_discount import increase_user_discount
+from app.services.referrals import award_referral_commission
 from app.services.cheat_promotion import (
     discounted_cheat_price,
     effective_cheat_discount_percent,
@@ -132,7 +133,7 @@ def download_account_purchase(
 
 
 @router.get("")
-def get_accounts(
+async def get_accounts(
     game: str | None = Query(default=None),
     q: str | None = Query(default=None),
     sort: str = Query(default="default"),
@@ -149,10 +150,23 @@ def get_accounts(
         WHERE COALESCE(vis, 1) = 1
     """)).mappings().all()
     promotion_fields = _account_promotion_fields(db)
-    accounts = [
-        {**_catalog_item(row), **promotion_fields}
-        for row in rows
-    ]
+    try:
+        live_stock = await nfa.get_stock()
+    except (NfaConfigurationError, RuntimeError):
+        live_stock = {}
+
+    accounts = []
+    for row in rows:
+        metadata = _account_metadata(row["meta_data"])
+        account_type = str(row["type"] or "").strip()
+        if account_type and account_type in live_stock:
+            try:
+                metadata["stock"] = max(0, int(live_stock[account_type]))
+            except (TypeError, ValueError):
+                pass
+        row_dict = dict(row)
+        row_dict["meta_data"] = json.dumps(metadata, ensure_ascii=False)
+        accounts.append({**_catalog_item(row_dict), **promotion_fields})
 
     if game:
         game_filter = game.strip().lower()
@@ -207,6 +221,20 @@ async def purchase_account(
     account_type = str(account_row["alias"] or "").strip()
     if not account_type:
         raise HTTPException(409, "Для аккаунта не задан тип выдачи")
+
+    try:
+        live_stock = await nfa.get_stock()
+        live_count = live_stock.get(account_type)
+        try:
+            live_count = int(live_count)
+        except (TypeError, ValueError):
+            live_count = 0
+        if live_count <= 0:
+            raise HTTPException(409, "Аккаунт закончился")
+    except HTTPException:
+        raise
+    except (NfaConfigurationError, RuntimeError):
+        pass
 
     locked_user = (
         db.query(User)
@@ -287,7 +315,7 @@ async def purchase_account(
             ctx=f"ACCOUNT_ORDER #{order_id}:CASHBACK",
         ))
 
-    db.add(BotOrder(
+    bot_order = BotOrder(
         id=order_id,
         external_order_id=order_id,
         item_alias=account_type,
@@ -302,7 +330,15 @@ async def purchase_account(
         key_value="Файл аккаунта доступен для скачивания в истории покупок",
         delivery_file=exe_file,
         delivery_filename=filename,
-    ))
+    )
+    db.add(bot_order)
+    award_referral_commission(
+        db,
+        buyer=locked_user,
+        sale_amount=price,
+        source_type="bot_order",
+        source_id=order_id,
+    )
     metadata["stock"] = max(0, _stock_count(metadata) - 1)
     db.execute(
         text("UPDATE accounts SET meta_data = :metadata WHERE id = :account_id"),

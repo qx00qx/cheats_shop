@@ -125,6 +125,8 @@ export default function AdminSeo() {
         {
           title: selectedPage.title,
           description: selectedPage.description,
+          h1: selectedPage.h1,
+          seo_text: selectedPage.seo_text,
           image: selectedPage.image,
           noindex: selectedPage.noindex,
         },
@@ -262,6 +264,30 @@ export default function AdminSeo() {
                 onChange={(event) => updatePage("description", event.target.value)}
                 placeholder="Пусто — использовать описание страницы"
               />
+            </label>
+            <label style={fieldStyle}>
+              <span>H1 страницы</span>
+              <input
+                maxLength={255}
+                style={inputStyle}
+                value={selectedPage.h1}
+                onChange={(event) => updatePage("h1", event.target.value)}
+                placeholder="Пусто — использовать заголовок по умолчанию"
+              />
+            </label>
+            <label style={fieldStyle}>
+              <span>SEO-текст</span>
+              <textarea
+                maxLength={20000}
+                rows={8}
+                style={inputStyle}
+                value={selectedPage.seo_text}
+                onChange={(event) => updatePage("seo_text", event.target.value)}
+                placeholder="Текстовый блок внизу страницы; допускается HTML"
+              />
+              <small className="muted">
+                HTML очищается от небезопасных тегов перед отображением.
+              </small>
             </label>
             <label style={fieldStyle}>
               <span>Изображение Open Graph / Twitter</span>

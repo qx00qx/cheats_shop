@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { api } from "../api/client";
 
 export type SeoSettings = {
@@ -14,6 +15,8 @@ export type SeoPageSettings = {
   label: string;
   title: string;
   description: string;
+  h1: string;
+  seo_text: string;
   image: string;
   noindex: boolean;
 };
@@ -86,4 +89,33 @@ export function loadSeoPage(pageKey: string): Promise<SeoPageSettings> {
 export function cacheSeoPage(page: SeoPageSettings): void {
   cachedPages.set(page.key, page);
   pageRequests.set(page.key, Promise.resolve(page));
+}
+
+export function useSeoPage(pageKey: string | null): SeoPageSettings | null {
+  const [page, setPage] = useState<SeoPageSettings | null>(
+    () => pageKey ? getCachedSeoPage(pageKey) : null,
+  );
+
+  useEffect(() => {
+    if (!pageKey) {
+      setPage(null);
+      return;
+    }
+
+    let active = true;
+    setPage(getCachedSeoPage(pageKey));
+    loadSeoPage(pageKey)
+      .then((loadedPage) => {
+        if (active) setPage(loadedPage);
+      })
+      .catch((error: unknown) => {
+        console.error(`Failed to load SEO settings for page "${pageKey}":`, error);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [pageKey]);
+
+  return page?.key === pageKey ? page : null;
 }

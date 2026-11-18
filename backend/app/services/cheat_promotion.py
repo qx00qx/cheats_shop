@@ -6,8 +6,15 @@ from sqlalchemy.orm import Session
 
 
 PROMOTION_CAMPAIGN_KEY = "launch_week_15"
-CHEAT_PROMOTION_DISCOUNT_PERCENT = 15
-CHEAT_PROMOTION_DURATION = timedelta(days=7)
+CHEAT_PROMOTION_DISCOUNT_PERCENT = 20
+CHEAT_PROMOTION_ENDS_AT = datetime(
+    2026,
+    11,
+    15,
+    0,
+    0,
+    tzinfo=timezone(timedelta(hours=3)),
+)
 MAX_LOYALTY_DISCOUNT_PERCENT = 10
 
 
@@ -16,7 +23,7 @@ def promotion_window(
 ) -> tuple[datetime, datetime]:
     if starts_at.tzinfo is None:
         starts_at = starts_at.replace(tzinfo=timezone.utc)
-    ends_at = starts_at + CHEAT_PROMOTION_DURATION
+    ends_at = CHEAT_PROMOTION_ENDS_AT
     return starts_at, ends_at
 
 

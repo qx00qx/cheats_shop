@@ -22,6 +22,8 @@ export interface BlogArticle extends BlogArticleListItem {
   updated_at?: string;
   seo_title?: string | null;
   seo_description?: string | null;
+  seo_h1?: string | null;
+  seo_text?: string | null;
   seo_image?: string | null;
   seo_noindex?: boolean;
 }

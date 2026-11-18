@@ -12,6 +12,18 @@ type Game = {
 type TariffDraft = { label: string; price: string; raw_price?: string | null };
 type GalleryMedia = { type: "image" | "video"; url: string; alt: string };
 type VideoUploadResponse = { filename: string; url: string };
+type ItemKeyInventory = {
+  item_id: number;
+  item_alias: string;
+  available: number;
+  used: number;
+};
+type ItemKeyUploadResponse = {
+  item_id: number;
+  added: number;
+  duplicates: number;
+  available: number;
+};
 const VIDEO_CHUNK_SIZE = 512 * 1024;
 type FeatureCategory = { id: number; title: string };
 type FeatureCategoryDraft = { category_id: number; features_text: string };
@@ -26,9 +38,12 @@ type ItemDraft = {
   alias: string;
   seo_title: string;
   seo_description: string;
+  seo_h1: string;
+  seo_text: string;
   seo_image: string;
   seo_noindex: boolean;
   game_id: number;
+  sort_order: number;
   systems: string;
   text: string;
   instruction: string;
@@ -86,9 +101,10 @@ type AdminItem = Omit<ItemDraft, "feature_categories"> & {
   feature_categories?: AssignedFeatureCategory[];
 };
 
-type ItemSort = "newest" | "oldest" | "name" | "game" | "price-asc" | "price-desc" | "active" | "inactive";
+type ItemSort = "sort-order" | "newest" | "oldest" | "name" | "game" | "price-asc" | "price-desc" | "active" | "inactive";
 
 const itemSortOptions: { value: ItemSort; label: string }[] = [
+  { value: "sort-order", label: "Порядок витрины" },
   { value: "newest", label: "Сначала новые" },
   { value: "oldest", label: "Сначала старые" },
   { value: "name", label: "По названию" },
@@ -111,9 +127,12 @@ const emptyDraft = (): ItemDraft => ({
   alias: "",
   seo_title: "",
   seo_description: "",
+  seo_h1: "",
+  seo_text: "",
   seo_image: "",
   seo_noindex: false,
   game_id: 0,
+  sort_order: 999,
   systems: "",
   text: "",
   instruction: "",
@@ -266,11 +285,20 @@ export default function AdminProducts() {
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const videoUploadTarget = useRef<number | null>(null);
   const videoFileInput = useRef<HTMLInputElement>(null);
-  const [itemSort, setItemSort] = useState<ItemSort>("newest");
+  const [keyManagerItem, setKeyManagerItem] = useState<AdminItem | null>(null);
+  const [keyInventory, setKeyInventory] = useState<ItemKeyInventory | null>(null);
+  const [keyText, setKeyText] = useState("");
+  const [keyManagerLoading, setKeyManagerLoading] = useState(false);
+  const [keyUploadLoading, setKeyUploadLoading] = useState(false);
+  const [keyManagerError, setKeyManagerError] = useState("");
+  const [keyManagerNotice, setKeyManagerNotice] = useState("");
+  const [itemSort, setItemSort] = useState<ItemSort>("sort-order");
 
   const sortedItems = [...items].sort((left, right) => {
     const newestFirst = right.id - left.id;
     switch (itemSort) {
+      case "sort-order":
+        return left.sort_order - right.sort_order || newestFirst;
       case "oldest":
         return left.id - right.id;
       case "name":
@@ -419,6 +447,70 @@ export default function AdminProducts() {
     setEditorCategoryTitle("");
     setEditorCategoryError("");
     setShowModal(true);
+  };
+
+  const openKeyManager = async (item: AdminItem) => {
+    setKeyManagerItem(item);
+    setKeyInventory(null);
+    setKeyText("");
+    setKeyManagerError("");
+    setKeyManagerNotice("");
+    setKeyManagerLoading(true);
+    try {
+      const response = await api.get<ItemKeyInventory>(
+        `/catalog/admin/items/${item.id}/keys`,
+      );
+      setKeyInventory(response.data);
+    } catch (loadError) {
+      console.error("Failed to load item key inventory:", loadError);
+      setKeyManagerError(getApiError(loadError));
+    } finally {
+      setKeyManagerLoading(false);
+    }
+  };
+
+  const selectKeyFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    if (!file) return;
+    if (file.size > 500000) {
+      setKeyManagerError("Файл должен быть не больше 500 КБ.");
+      return;
+    }
+    try {
+      setKeyText(await file.text());
+      setKeyManagerError("");
+    } catch (loadError) {
+      console.error("Failed to read key inventory file:", loadError);
+      setKeyManagerError("Не удалось прочитать файл.");
+    }
+  };
+
+  const uploadItemKeys = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!keyManagerItem || !keyText.trim()) return;
+    setKeyUploadLoading(true);
+    setKeyManagerError("");
+    setKeyManagerNotice("");
+    try {
+      const response = await api.post<ItemKeyUploadResponse>(
+        `/catalog/admin/items/${keyManagerItem.id}/keys`,
+        { keys: keyText },
+      );
+      setKeyInventory((current) => current ? {
+        ...current,
+        available: response.data.available,
+      } : current);
+      setKeyManagerNotice(
+        `Добавлено: ${response.data.added}. Пропущено повторов: ${response.data.duplicates}.`,
+      );
+      setKeyText("");
+    } catch (uploadError) {
+      console.error("Failed to upload item keys:", uploadError);
+      setKeyManagerError(getApiError(uploadError));
+    } finally {
+      setKeyUploadLoading(false);
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -661,6 +753,20 @@ export default function AdminProducts() {
               {games.map((game) => <option key={game.id} value={game.id}>{game.title}</option>)}
             </select>
           </div>
+          <div style={fieldStyle}>
+            <label style={labelStyle} htmlFor="item-sort-order">Порядок на витрине</label>
+            <input
+              id="item-sort-order"
+              className="input"
+              type="number"
+              min={0}
+              max={1000000}
+              step={1}
+              value={draft.sort_order}
+              onChange={(event) => setDraft({ ...draft, sort_order: Number(event.target.value) })}
+            />
+            <span className="muted">Меньшее число — выше в каталоге. При одинаковом значении выше будут новые товары.</span>
+          </div>
           <fieldset style={{ border: "1px solid rgba(0,255,140,0.2)", borderRadius: 12, padding: 14 }}>
             <legend>SEO</legend>
             <div style={{ display: "grid", gap: 12 }}>
@@ -685,6 +791,29 @@ export default function AdminProducts() {
                   value={draft.seo_description}
                   onChange={(event) => setDraft({ ...draft, seo_description: event.target.value })}
                   placeholder="Пусто — сформировать из описания чита"
+                />
+              </div>
+              <div style={fieldStyle}>
+                <label style={labelStyle} htmlFor="item-seo-h1">H1 страницы</label>
+                <input
+                  id="item-seo-h1"
+                  className="input"
+                  maxLength={255}
+                  value={draft.seo_h1}
+                  onChange={(event) => setDraft({ ...draft, seo_h1: event.target.value })}
+                  placeholder="Пусто — использовать название чита"
+                />
+              </div>
+              <div style={fieldStyle}>
+                <label style={labelStyle} htmlFor="item-seo-text">SEO-текст</label>
+                <textarea
+                  id="item-seo-text"
+                  className="input"
+                  maxLength={20000}
+                  rows={6}
+                  value={draft.seo_text}
+                  onChange={(event) => setDraft({ ...draft, seo_text: event.target.value })}
+                  placeholder="Дополнительный текст под описанием товара; допускается HTML"
                 />
               </div>
               <div style={fieldStyle}>
@@ -1030,6 +1159,95 @@ export default function AdminProducts() {
     document.body
   ) : null;
 
+  const keyModal = keyManagerItem && typeof document !== "undefined" ? createPortal(
+    <div
+      role="presentation"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 1000000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+        background: "rgba(0,0,0,0.78)",
+        backdropFilter: "blur(8px)",
+      }}
+      onClick={() => !keyUploadLoading && setKeyManagerItem(null)}
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-item-keys-title"
+        style={{
+          width: "min(600px, 100%)",
+          maxHeight: "92vh",
+          overflowY: "auto",
+          padding: 24,
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 16,
+          background: "#0f1114",
+        }}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2 id="admin-item-keys-title" style={{ marginTop: 0 }}>
+          Ключи: {keyManagerItem.name}
+        </h2>
+        {keyManagerLoading ? (
+          <p className="muted">Загрузка остатков...</p>
+        ) : keyInventory ? (
+          <p className="muted" aria-live="polite">
+            В наличии: {keyInventory.available} · Выдано: {keyInventory.used}
+          </p>
+        ) : null}
+        {keyManagerError && <p role="alert" style={{ color: "#ff8a8a" }}>{keyManagerError}</p>}
+        {keyManagerNotice && <p role="status" style={{ color: "#7ee6ae" }}>{keyManagerNotice}</p>}
+        <form onSubmit={uploadItemKeys} style={{ display: "grid", gap: 12 }}>
+          <label htmlFor="item-keys-file" style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
+            Загрузить .txt (по одному ключу на строку, до 5000 ключей)
+          </label>
+          <input
+            id="item-keys-file"
+            type="file"
+            accept=".txt,text/plain"
+            onChange={(event) => void selectKeyFile(event)}
+          />
+          <label htmlFor="item-keys-text" style={{ fontSize: 13, color: "rgba(255,255,255,0.7)" }}>
+            Или вставьте ключи списком
+          </label>
+          <textarea
+            id="item-keys-text"
+            className="input"
+            rows={10}
+            maxLength={500000}
+            value={keyText}
+            onChange={(event) => setKeyText(event.target.value)}
+            placeholder={"KEY-001\nKEY-002"}
+            required
+          />
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+            <button
+              type="button"
+              className="btn-ghost"
+              disabled={keyUploadLoading}
+              onClick={() => setKeyManagerItem(null)}
+            >
+              Закрыть
+            </button>
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={keyUploadLoading || keyManagerLoading || !keyText.trim()}
+            >
+              {keyUploadLoading ? "Загрузка..." : "Добавить ключи"}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>,
+    document.body
+  ) : null;
+
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 24 }}>
@@ -1090,9 +1308,12 @@ export default function AdminProducts() {
             <div key={item.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: 14, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10 }}>
               <div style={{ minWidth: 0 }}>
                 <strong>{item.name}</strong>
-                <div className="muted">{item.game_title || "Игра не указана"} · {item.alias} · {item.vis ? "В каталоге" : "Скрыт"} · {item.status ? "Активен" : "Отключен"}</div>
+                <div className="muted">{item.game_title || "Игра не указана"} · порядок {item.sort_order} · {item.alias} · {item.vis ? "В каталоге" : "Скрыт"} · {item.status ? "Активен" : "Отключен"}</div>
               </div>
               <div style={{ display: "flex", flex: "0 0 auto", gap: 8 }}>
+                <button type="button" className="btn-ghost" onClick={() => void openKeyManager(item)}>
+                  Ключи
+                </button>
                 <select
                   className="input"
                   aria-label={`Префикс чита ${item.name}`}
@@ -1125,6 +1346,7 @@ export default function AdminProducts() {
         </div>
       )}
       {modal}
+      {keyModal}
     </div>
   );
 }

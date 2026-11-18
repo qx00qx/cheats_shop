@@ -1,6 +1,22 @@
 import { useState, useEffect } from "react";
-import { EmailerAPI, Emailer, EmailerCreate, EmailerServiceStatus } from "../api/emailer";
+import {
+  EmailerAPI,
+  Emailer,
+  EmailerCreate,
+  EmailerServiceStatus,
+  EmailRecipient,
+} from "../api/emailer";
 import { createPortal } from "react-dom";
+
+const createEmptyCampaign = (): EmailerCreate => ({
+  subject: "",
+  from_email: "",
+  to_email: null,
+  cc_email: null,
+  body: "",
+  recipient_mode: "all",
+  recipient_ids: [],
+});
 
 export default function AdminEmailer() {
   const [emailers, setEmailers] = useState<Emailer[]>([]);
@@ -10,14 +26,14 @@ export default function AdminEmailer() {
   const [sendingId, setSendingId] = useState<number | null>(null);
   const [serviceStatus, setServiceStatus] = useState<EmailerServiceStatus | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [recipientSearch, setRecipientSearch] = useState("");
+  const [recipientOptions, setRecipientOptions] = useState<EmailRecipient[]>([]);
+  const [selectedRecipients, setSelectedRecipients] = useState<
+    Record<number, EmailRecipient>
+  >({});
+  const [recipientsLoading, setRecipientsLoading] = useState(false);
 
-  const [formData, setFormData] = useState<EmailerCreate>({
-    subject: "",
-    from_email: "",
-    to_email: null,
-    cc_email: null,
-    body: "",
-  });
+  const [formData, setFormData] = useState<EmailerCreate>(createEmptyCampaign);
 
   useEffect(() => {
     setMounted(true);
@@ -31,6 +47,32 @@ export default function AdminEmailer() {
     const intervalId = window.setInterval(loadEmailers, 2000);
     return () => window.clearInterval(intervalId);
   }, [emailers]);
+
+  useEffect(() => {
+    if (!showModal || formData.recipient_mode !== "selected") return;
+
+    let active = true;
+    const timeoutId = window.setTimeout(() => {
+      setRecipientsLoading(true);
+      EmailerAPI.recipients(recipientSearch)
+        .then((recipients) => {
+          if (active) setRecipientOptions(recipients);
+        })
+        .catch((err: unknown) => {
+          if (!active) return;
+          console.error("Failed to search email recipients:", err);
+          setErrorMessage("Не удалось загрузить список пользователей.");
+        })
+        .finally(() => {
+          if (active) setRecipientsLoading(false);
+        });
+    }, 250);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [showModal, formData.recipient_mode, recipientSearch]);
 
   const loadEmailers = async () => {
     try {
@@ -53,19 +95,19 @@ export default function AdminEmailer() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage("");
     try {
       await EmailerAPI.create(formData);
       setShowModal(false);
-      setFormData({
-        subject: "",
-        from_email: "",
-        to_email: null,
-        cc_email: null,
-        body: "",
-      });
+      setFormData(createEmptyCampaign());
+      setRecipientSearch("");
+      setSelectedRecipients({});
       loadEmailers();
     } catch (err) {
       console.error("Failed to create emailer:", err);
+      setErrorMessage(
+        err instanceof Error ? err.message : "Не удалось создать рассылку.",
+      );
     } finally {
       setLoading(false);
     }
@@ -75,10 +117,13 @@ export default function AdminEmailer() {
     id: number,
     subject: string,
     toEmail: string | null,
+    recipientEmails: string[],
   ) => {
-    const recipientCount = toEmail ? 1 : serviceStatus?.recipient_count ?? 0;
+    const recipientCount = toEmail
+      ? 1
+      : recipientEmails.length || serviceStatus?.recipient_count || 0;
     if (!window.confirm(
-      `Отправить «${subject}» на ${recipientCount} адресов пользователей?`,
+      `Отправить «${subject}» на ${recipientCount} адресов?`,
     )) {
       return;
     }
@@ -94,6 +139,22 @@ export default function AdminEmailer() {
     } finally {
       setSendingId(null);
     }
+  };
+
+  const toggleRecipient = (recipient: EmailRecipient) => {
+    const isSelected = formData.recipient_ids.includes(recipient.id);
+    setFormData((current) => ({
+      ...current,
+      recipient_ids: isSelected
+        ? current.recipient_ids.filter((id) => id !== recipient.id)
+        : [...current.recipient_ids, recipient.id],
+    }));
+    setSelectedRecipients((current) => {
+      const next = { ...current };
+      if (isSelected) delete next[recipient.id];
+      else next[recipient.id] = recipient;
+      return next;
+    });
   };
 
   const handleDelete = async (id: number) => {
@@ -194,7 +255,10 @@ export default function AdminEmailer() {
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>{emailer.subject}</td>
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>{emailer.from_email}</td>
                   <td style={{ padding: "12px 16px", fontSize: 14 }}>
-                    {emailer.to_email || "Все email-адреса пользователей"}
+                    {emailer.to_email
+                      || (emailer.recipient_emails.length > 0
+                        ? `Выбрано адресов: ${emailer.recipient_emails.length}`
+                        : "Все email-адреса пользователей")}
                     {emailer.recipient_count > 0 && (
                       <small style={{ display: "block", marginTop: 4, color: "rgba(255,255,255,0.55)" }}>
                         {emailer.sent_count} из {emailer.recipient_count}
@@ -249,10 +313,11 @@ export default function AdminEmailer() {
                             emailer.id,
                             emailer.subject,
                             emailer.to_email,
+                            emailer.recipient_emails,
                           )}
                           style={{ padding: "4px 8px", fontSize: 12 }}
                         >
-                          Отправить всем
+                          Отправить
                         </button>
                       )}
                       <button
@@ -321,6 +386,108 @@ export default function AdminEmailer() {
 
               <div>
                 <label style={{ display: "block", marginBottom: 8, fontSize: 14, color: "rgba(255,255,255,0.7)" }}>
+                  Получатели *
+                </label>
+                <select
+                  className="input"
+                  value={formData.recipient_mode}
+                  onChange={(event) => {
+                    const mode = event.target.value as EmailerCreate["recipient_mode"];
+                    setFormData((current) => ({
+                      ...current,
+                      recipient_mode: mode,
+                      to_email: mode === "single" ? current.to_email : null,
+                      recipient_ids: mode === "selected" ? current.recipient_ids : [],
+                    }));
+                    if (mode !== "selected") setSelectedRecipients({});
+                    setErrorMessage("");
+                  }}
+                >
+                  <option value="all">Все пользователи ({serviceStatus?.recipient_count ?? "…" })</option>
+                  <option value="selected">Выбрать пользователей</option>
+                  <option value="single">Один email для теста</option>
+                </select>
+                {formData.recipient_mode === "selected" && (
+                  <div style={{ marginTop: 10 }}>
+                    <input
+                      className="input"
+                      type="search"
+                      placeholder="Поиск по email или никнейму"
+                      value={recipientSearch}
+                      onChange={(event) => setRecipientSearch(event.target.value)}
+                    />
+                    <div
+                      style={{
+                        maxHeight: 190,
+                        overflowY: "auto",
+                        marginTop: 8,
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: 8,
+                      }}
+                    >
+                      {recipientsLoading ? (
+                        <p style={{ padding: 12, margin: 0 }}>Загрузка пользователей...</p>
+                      ) : recipientOptions.length === 0 ? (
+                        <p style={{ padding: 12, margin: 0, color: "rgba(255,255,255,0.6)" }}>
+                          Пользователи не найдены
+                        </p>
+                      ) : recipientOptions.map((recipient) => (
+                        <label
+                          key={recipient.id}
+                          style={{
+                            display: "flex",
+                            gap: 10,
+                            alignItems: "center",
+                            padding: "9px 12px",
+                            cursor: "pointer",
+                            borderBottom: "1px solid rgba(255,255,255,0.06)",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.recipient_ids.includes(recipient.id)}
+                            onChange={() => toggleRecipient(recipient)}
+                          />
+                          <span>
+                            <strong>{recipient.username}</strong>
+                            <small style={{ display: "block", color: "rgba(255,255,255,0.6)" }}>
+                              {recipient.email}
+                            </small>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    <small style={{ display: "block", marginTop: 6, color: "rgba(255,255,255,0.6)" }}>
+                      Выбрано: {formData.recipient_ids.length}
+                      {Object.values(selectedRecipients).length > 0 && (
+                        <span> · {Object.values(selectedRecipients).map((recipient) => recipient.email).join(", ")}</span>
+                      )}
+                    </small>
+                  </div>
+                )}
+                {formData.recipient_mode === "single" && (
+                  <input
+                    className="input"
+                    type="email"
+                    placeholder="test@example.com"
+                    value={formData.to_email || ""}
+                    onChange={(event) => setFormData({
+                      ...formData,
+                      to_email: event.target.value || null,
+                    })}
+                    required
+                    style={{ marginTop: 10 }}
+                  />
+                )}
+                {formData.recipient_mode === "all" && (
+                  <small style={{ display: "block", marginTop: 6, color: "rgba(255,255,255,0.6)" }}>
+                    Каждому пользователю отправляется отдельное письмо.
+                  </small>
+                )}
+              </div>
+
+              <div>
+                <label style={{ display: "block", marginBottom: 8, fontSize: 14, color: "rgba(255,255,255,0.7)" }}>
                   От (email) *
                 </label>
                 <input
@@ -330,24 +497,6 @@ export default function AdminEmailer() {
                   onChange={(e) => setFormData({ ...formData, from_email: e.target.value })}
                   required
                 />
-              </div>
-
-              <div>
-                <div
-                  style={{
-                    padding: "12px 14px",
-                    border: "1px solid rgba(0,255,148,0.2)",
-                    borderRadius: 9,
-                    background: "rgba(0,255,148,0.05)",
-                    color: "rgba(255,255,255,0.8)",
-                    fontSize: 13,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Аудитория: все адреса в базе пользователей
-                  {serviceStatus && ` (${serviceStatus.recipient_count})`}
-                  . Каждому пользователю отправляется отдельное письмо, адреса получателей не раскрываются.
-                </div>
               </div>
 
               <div>
@@ -376,6 +525,11 @@ export default function AdminEmailer() {
               </div>
 
               <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 8 }}>
+                {errorMessage && (
+                  <p role="alert" style={{ color: "#ff7777", marginRight: "auto" }}>
+                    {errorMessage}
+                  </p>
+                )}
                 <button
                   type="button"
                   className="btn-ghost"
@@ -384,8 +538,20 @@ export default function AdminEmailer() {
                 >
                   Отмена
                 </button>
-                <button type="submit" className="btn-primary" disabled={loading}>
-                  {loading ? "Создание..." : "Создать"}
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={
+                    loading ||
+                    (formData.recipient_mode === "selected" &&
+                      formData.recipient_ids.length === 0)
+                  }
+                >
+                  {loading
+                    ? "Создание..."
+                    : formData.recipient_mode === "selected" && formData.recipient_ids.length === 0
+                      ? "Выберите получателей"
+                      : "Создать"}
                 </button>
               </div>
             </form>

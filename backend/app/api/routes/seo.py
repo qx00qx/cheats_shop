@@ -64,10 +64,12 @@ class SeoSettingsInput(BaseModel):
 class SeoPageInput(BaseModel):
     title: str = Field(default="", max_length=255)
     description: str = Field(default="", max_length=500)
+    h1: str = Field(default="", max_length=255)
+    seo_text: str = Field(default="", max_length=20000)
     image: str = Field(default="", max_length=2000)
     noindex: bool = False
 
-    @field_validator("title", "description", mode="before")
+    @field_validator("title", "description", "h1", "seo_text", mode="before")
     @classmethod
     def trim_text(cls, value: str) -> str:
         return value.strip() if isinstance(value, str) else value
@@ -94,6 +96,8 @@ def _serialize_page(page_key: str, page: SeoPage | None) -> dict:
         "label": definition["label"],
         "title": page.title if page else "",
         "description": page.description if page else "",
+        "h1": page.h1 if page else "",
+        "seo_text": page.seo_text if page else "",
         "image": page.image if page else "",
         "noindex": bool(page.noindex) if page else False,
     }

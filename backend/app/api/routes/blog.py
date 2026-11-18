@@ -30,6 +30,8 @@ class BlogArticleInput(BaseModel):
     vis: int | None = Field(default=None, ge=0, le=1)
     seo_title: str | None = Field(default=None, max_length=255)
     seo_description: str | None = Field(default=None, max_length=500)
+    seo_h1: str | None = Field(default=None, max_length=255)
+    seo_text: str | None = Field(default=None, max_length=20000)
     seo_image: str | None = Field(default=None, max_length=2000)
     seo_noindex: bool = False
 
@@ -91,6 +93,8 @@ def _serialize_admin_article(article: BlogArticle) -> dict:
         "date": article.date.isoformat() if article.date else None,
         "seo_title": article.meta_title or "",
         "seo_description": article.meta_description or "",
+        "seo_h1": article.seo_h1 or "",
+        "seo_text": article.seo_text or "",
         "seo_image": article.seo_image or "",
         "seo_noindex": article.seo_noindex,
     }
@@ -149,6 +153,8 @@ def create_admin_blog_article(
             if payload.seo_description is not None
             else excerpt
         ),
+        seo_h1=payload.seo_h1,
+        seo_text=payload.seo_text,
         seo_image=payload.seo_image,
         seo_noindex=payload.seo_noindex,
     )
@@ -190,6 +196,10 @@ def update_admin_blog_article(
         article.meta_description = excerpt
     if "seo_image" in payload.model_fields_set:
         article.seo_image = payload.seo_image
+    if "seo_h1" in payload.model_fields_set:
+        article.seo_h1 = payload.seo_h1
+    if "seo_text" in payload.model_fields_set:
+        article.seo_text = payload.seo_text
     if "seo_noindex" in payload.model_fields_set:
         article.seo_noindex = payload.seo_noindex
     if payload.vis is not None:
@@ -261,6 +271,8 @@ def get_blog_article(slug: str, db: Session = Depends(get_db)):
         updated_at=None,
         seo_title=article.meta_title or None,
         seo_description=article.meta_description,
+        seo_h1=article.seo_h1,
+        seo_text=article.seo_text,
         seo_image=article.seo_image,
         seo_noindex=article.seo_noindex,
     )

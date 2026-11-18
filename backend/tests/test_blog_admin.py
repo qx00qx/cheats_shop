@@ -38,6 +38,8 @@ def test_admin_can_create_and_edit_blog_articles():
                 "text": "<h2>Заголовок</h2><p>Текст статьи</p>",
                 "seo_title": "Индивидуальный заголовок",
                 "seo_description": "Индивидуальное описание",
+                "seo_h1": "Отдельный H1 статьи",
+                "seo_text": "<p>Дополнительный SEO-текст</p>",
                 "seo_image": "/uploads/article.jpg",
                 "seo_noindex": True,
             },
@@ -50,6 +52,8 @@ def test_admin_can_create_and_edit_blog_articles():
         assert article["vis"] == 1
         assert article["seo_title"] == "Индивидуальный заголовок"
         assert article["seo_description"] == "Индивидуальное описание"
+        assert article["seo_h1"] == "Отдельный H1 статьи"
+        assert article["seo_text"] == "<p>Дополнительный SEO-текст</p>"
         assert article["seo_image"] == "/uploads/article.jpg"
         assert article["seo_noindex"] is True
 
@@ -60,6 +64,8 @@ def test_admin_can_create_and_edit_blog_articles():
                 "text": "<p>Новый текст</p>",
                 "seo_title": "Новое SEO",
                 "seo_description": "Новое описание",
+                "seo_h1": "Обновлённый H1",
+                "seo_text": "<p>Обновлённый SEO-текст</p>",
                 "seo_image": "https://millex.market/uploads/new-article.jpg",
                 "seo_noindex": False,
             },
@@ -68,6 +74,8 @@ def test_admin_can_create_and_edit_blog_articles():
         assert updated.json()["alias"] == "novaya-statya"
         assert updated.json()["name"] == "Обновлённая статья"
         assert updated.json()["seo_title"] == "Новое SEO"
+        assert updated.json()["seo_h1"] == "Обновлённый H1"
+        assert updated.json()["seo_text"] == "<p>Обновлённый SEO-текст</p>"
         assert updated.json()["seo_image"] == "https://millex.market/uploads/new-article.jpg"
         assert updated.json()["seo_noindex"] is False
 
@@ -75,6 +83,8 @@ def test_admin_can_create_and_edit_blog_articles():
         assert public_article.status_code == 200
         assert public_article.json()["content"] == "<p>Новый текст</p>"
         assert public_article.json()["seo_title"] == "Новое SEO"
+        assert public_article.json()["seo_h1"] == "Обновлённый H1"
+        assert public_article.json()["seo_text"] == "<p>Обновлённый SEO-текст</p>"
         assert public_article.json()["seo_image"] == "https://millex.market/uploads/new-article.jpg"
         assert public_article.json()["seo_noindex"] is False
 

@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Integer, Numeric, String, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
@@ -20,6 +20,12 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     balance: Mapped[str] = mapped_column(String(32), default="0")
     discount_percent: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    referral_code: Mapped[str | None] = mapped_column(String(32), unique=True, nullable=True)
+    referred_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     totp_secret: Mapped[str | None] = mapped_column(String(64), nullable=True)

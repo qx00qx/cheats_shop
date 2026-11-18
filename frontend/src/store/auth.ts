@@ -6,7 +6,12 @@ type AuthState = {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, username: string, password: string) => Promise<void>;
+  register: (
+    email: string,
+    username: string,
+    password: string,
+    referralCode?: string,
+  ) => Promise<void>;
   logout: () => void;
   loadMe: () => Promise<boolean>;
 };
@@ -22,8 +27,13 @@ export const useAuth = create<AuthState>((set, get) => ({
     set({ token: access_token, user });
   },
 
-  async register(email, username, password) {
-    const { access_token, user } = await AuthAPI.register(email, username, password);
+  async register(email, username, password, referralCode) {
+    const { access_token, user } = await AuthAPI.register(
+      email,
+      username,
+      password,
+      referralCode,
+    );
     localStorage.setItem("millex_token", access_token);
     localStorage.setItem("millex_user", JSON.stringify(user));
     set({ token: access_token, user });

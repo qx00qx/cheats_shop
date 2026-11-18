@@ -4,6 +4,7 @@ import DOMPurify from "dompurify";
 import { useModalStore } from "../hooks/useModal";
 import PurchaseModalContent from "../components/PurchaseModalContent";
 import Seo from "../components/Seo";
+import { SeoTextBlock } from "../components/SeoPageContent";
 import { useAuth } from "../store/auth";
 import { formatDuration, getGameImage } from "../utils/gameCatalog";
 import { getVideoEmbedUrl, isDirectVideoUrl } from "../utils/media";
@@ -37,6 +38,8 @@ type Item = {
   alias: string;
   seo_title?: string | null;
   seo_description?: string | null;
+  seo_h1?: string | null;
+  seo_text?: string | null;
   seo_image?: string | null;
   seo_noindex?: boolean;
   text?: string | null;
@@ -503,7 +506,9 @@ export default function ItemPage() {
               <div className="item-hero__top">
                 <div>
                   <div className="item-hero__label">Чит для игры</div>
-                  <h1 className="item-hero__title">{item.name}</h1>
+                  <h1 className="item-hero__title">
+                    {item.seo_h1?.trim() || item.name}
+                  </h1>
                 </div>
 
                 <div className="item-hero__status">
@@ -978,6 +983,7 @@ export default function ItemPage() {
             )}
           </section>
         )}
+        <SeoTextBlock content={item.seo_text} />
       </div>
     </div>
   );
