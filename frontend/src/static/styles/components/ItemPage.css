@@ -499,7 +499,7 @@
   display: flex;
   gap: 16px;
   overflow-x: auto;
-  padding: 2px 2px 12px;
+  padding: 6px 2px 12px;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
@@ -597,7 +597,7 @@
   display: -webkit-box;
   min-height: 40px;
   overflow: hidden;
-  margin: 0 0 10px;
+  margin: 0;
   color: #fff;
   font-size: 15px;
   font-weight: 800;
@@ -607,22 +607,18 @@
   line-clamp: 2;
 }
 
-.similar-cheat-card__features {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+.similar-cheat-card__game {
+  min-height: 12px;
+  margin: 5px 0 0;
 }
 
-.similar-cheat-card__features span {
-  max-width: 100%;
-  overflow: hidden;
-  padding: 4px 7px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.055);
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.similar-cheat-card__features {
+  min-height: 44px;
+  margin-top: 10px;
+}
+
+.similar-cheat-card__features .game-page__feature-tags {
+  margin-top: 0;
 }
 
 .similar-cheat-card__footer {

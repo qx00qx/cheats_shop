@@ -19,6 +19,16 @@ def make_similar_items_client():
     Base.metadata.create_all(engine)
     with engine.begin() as connection:
         connection.execute(text("""
+            CREATE TABLE global_promotions (
+                campaign_key TEXT PRIMARY KEY,
+                starts_at TIMESTAMP NOT NULL
+            )
+        """))
+        connection.execute(text("""
+            INSERT INTO global_promotions (campaign_key, starts_at)
+            VALUES ('launch_week_15', '2026-11-18 12:00:00')
+        """))
+        connection.execute(text("""
             CREATE TABLE items (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL,

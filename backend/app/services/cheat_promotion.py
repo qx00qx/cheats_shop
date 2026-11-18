@@ -50,6 +50,12 @@ def get_promotion_start(db: Session) -> datetime:
         raise RuntimeError(
             "Global promotion is not initialized; restart the backend to initialize it."
         )
+    if isinstance(starts_at, str):
+        starts_at = datetime.fromisoformat(
+            starts_at.strip().replace("Z", "+00:00")
+        )
+    if starts_at.tzinfo is None:
+        starts_at = starts_at.replace(tzinfo=timezone.utc)
     return starts_at
 
 

@@ -101,10 +101,11 @@ type AdminItem = Omit<ItemDraft, "feature_categories"> & {
   feature_categories?: AssignedFeatureCategory[];
 };
 
-type ItemSort = "sort-order" | "newest" | "oldest" | "name" | "game" | "price-asc" | "price-desc" | "active" | "inactive";
+type ItemSort = "sort-order" | "security" | "newest" | "oldest" | "name" | "game" | "price-asc" | "price-desc" | "active" | "inactive";
 
 const itemSortOptions: { value: ItemSort; label: string }[] = [
   { value: "sort-order", label: "Порядок витрины" },
+  { value: "security", label: "По статусу безопасности" },
   { value: "newest", label: "Сначала новые" },
   { value: "oldest", label: "Сначала старые" },
   { value: "name", label: "По названию" },
@@ -299,6 +300,8 @@ export default function AdminProducts() {
     switch (itemSort) {
       case "sort-order":
         return left.sort_order - right.sort_order || newestFirst;
+      case "security":
+        return left.security_status - right.security_status || newestFirst;
       case "oldest":
         return left.id - right.id;
       case "name":

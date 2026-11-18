@@ -114,6 +114,17 @@ function normalizeFeature(value: string): string {
   return value.trim().toLocaleLowerCase("ru-RU").replace(/\s+/g, " ");
 }
 
+function formatSharedCategoryCount(count: number): string {
+  const remainder100 = count % 100;
+  const remainder10 = count % 10;
+  const noun = remainder10 === 1 && remainder100 !== 11
+    ? "общая категория"
+    : remainder10 >= 2 && remainder10 <= 4 && (remainder100 < 12 || remainder100 > 14)
+      ? "общие категории"
+      : "общих категорий";
+  return `${count} ${noun}`;
+}
+
 function formatSharedFeatureCount(count: number): string {
   const remainder100 = count % 100;
   const remainder10 = count % 10;
@@ -906,76 +917,76 @@ export default function ItemPage() {
             {similarCheats.length > 0 ? (
               <div className="similar-cheats__viewport">
                 <div className="similar-cheats__grid" ref={similarCheatsTrackRef}>
-                {similarCheats.map(({ cheat, sharedFeatures }) => {
-                  const itemDiscountPercent = getCheatDiscountPercent(
-                    0,
-                    cheat.promo_discount_percent,
-                    cheat.promo_expires_at,
-                  );
-                  const price = Number(cheat.price);
-                  const discountedPrice = itemDiscountPercent
-                    ? applyDiscount(price, itemDiscountPercent)
-                    : price;
-                  const screenshot = cheat.gallery?.find(
-                    (media) => media.type === "image" && isSafeMediaUrl(media.url),
-                  )?.url ?? (
-                    cheat.image && isSafeMediaUrl(cheat.image) ? cheat.image : null
-                  );
+                  {similarCheats.map(({ cheat, sharedFeatures }) => {
+                    const itemDiscountPercent = getCheatDiscountPercent(
+                      0,
+                      cheat.promo_discount_percent,
+                      cheat.promo_expires_at,
+                    );
+                    const price = Number(cheat.price);
+                    const discountedPrice = itemDiscountPercent
+                      ? applyDiscount(price, itemDiscountPercent)
+                      : price;
+                    const screenshot = cheat.gallery?.find(
+                      (media) => media.type === "image" && isSafeMediaUrl(media.url),
+                    )?.url ?? (
+                      cheat.image && isSafeMediaUrl(cheat.image) ? cheat.image : null
+                    );
 
-                  return (
-                    <Link
-                      className="similar-cheat-card"
-                      key={cheat.id}
-                      to={`/item/${encodeURIComponent(cheat.alias)}`}
-                    >
-                      <div className="similar-cheat-card__image">
-                        <span className="similar-cheat-card__image-fallback" aria-hidden="true">
-                          MILLEX
-                        </span>
-                        {screenshot && (
-                          <img
-                            src={screenshot}
-                            alt=""
-                            loading="lazy"
-                            onError={(event) => {
-                              event.currentTarget.style.display = "none";
-                            }}
-                          />
-                        )}
-                        {sharedFeatures.length > 0 && (
-                          <span className="similar-cheat-card__match">
-                            {formatSharedFeatureCount(sharedFeatures.length)}
+                    return (
+                      <Link
+                        className="similar-cheat-card"
+                        key={cheat.id}
+                        to={`/item/${encodeURIComponent(cheat.alias)}`}
+                      >
+                        <div className="similar-cheat-card__image">
+                          <span className="similar-cheat-card__image-fallback" aria-hidden="true">
+                            MILLEX
                           </span>
-                        )}
-                      </div>
-                      <div className="similar-cheat-card__body">
-                        <h3 className="similar-cheat-card__name">{cheat.name}</h3>
-                        {sharedFeatures.length > 0 && (
-                          <div className="similar-cheat-card__features">
-                            {sharedFeatures.slice(0, 3).map((feature) => (
-                              <span key={normalizeFeature(feature)}>{feature}</span>
-                            ))}
-                          </div>
-                        )}
-                        <div className="similar-cheat-card__footer">
-                          {Number.isFinite(price) && price > 0 ? (
-                            <span className="similar-cheat-card__price">
-                              От{" "}
-                              <strong>
-                                {Math.round(discountedPrice).toLocaleString("ru-RU")} ₽
-                              </strong>
-                            </span>
-                          ) : (
-                            <span className="similar-cheat-card__price">Смотреть тарифы</span>
+                          {screenshot && (
+                            <img
+                              src={screenshot}
+                              alt=""
+                              loading="lazy"
+                              onError={(event) => {
+                                event.currentTarget.style.display = "none";
+                              }}
+                            />
                           )}
-                          <span className="similar-cheat-card__link">
-                            Подробнее <span aria-hidden="true">›</span>
-                          </span>
+                          {sharedFeatures.length > 0 && (
+                            <span className="similar-cheat-card__match">
+                              {formatSharedFeatureCount(sharedFeatures.length)}
+                            </span>
+                          )}
                         </div>
-                      </div>
-                    </Link>
-                  );
-                })}
+                        <div className="similar-cheat-card__body">
+                          <h3 className="similar-cheat-card__name">{cheat.name}</h3>
+                          {sharedFeatures.length > 0 && (
+                            <div className="similar-cheat-card__features">
+                              {sharedFeatures.slice(0, 3).map((feature) => (
+                                <span key={normalizeFeature(feature)}>{feature}</span>
+                              ))}
+                            </div>
+                          )}
+                          <div className="similar-cheat-card__footer">
+                            {Number.isFinite(price) && price > 0 ? (
+                              <span className="similar-cheat-card__price">
+                                От{" "}
+                                <strong>
+                                  {Math.round(discountedPrice).toLocaleString("ru-RU")} ₽
+                                </strong>
+                              </span>
+                            ) : (
+                              <span className="similar-cheat-card__price">Смотреть тарифы</span>
+                            )}
+                            <span className="similar-cheat-card__link">
+                              Подробнее <span aria-hidden="true">›</span>
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             ) : (
