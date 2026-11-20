@@ -124,6 +124,25 @@ export default function Header() {
 
         <nav className="nx-nav">
           <NavLink to="/catalog">Каталог</NavLink>
+          <NavLink to="/partnership">Партнёрство</NavLink>
+          <div className={`nx-bonus${location.pathname === "/referrals" || location.pathname === "/loyalty" ? " is-active" : ""}`}>
+            <button type="button" className="nx-bonus__toggle" aria-haspopup="true">
+              Бонусы
+              <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            <div className="nx-bonus__menu">
+              <NavLink to="/referrals">
+                <span>Реферальная программа</span>
+                <small>5% с покупок приглашённых друзей</small>
+              </NavLink>
+              <NavLink to="/loyalty">
+                <span>Бонусная система</span>
+                <small>Кэшбэк и уровни лояльности</small>
+              </NavLink>
+            </div>
+          </div>
           <a href="#support" className="js-support-open" onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); setSupportOpen(true); }}>Поддержка</a>
           <NavLink to="/blogs">Блог</NavLink>
           {/* <NavLink to="/accounts">Аккаунты</NavLink> */}
@@ -283,6 +302,12 @@ export default function Header() {
 
       <nav id="nx-mobile-menu" className={`nx-mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>
         <NavLink to="/catalog" onClick={closeMobileMenu}>Каталог</NavLink>
+        <NavLink to="/partnership" onClick={closeMobileMenu}>Партнёрство</NavLink>
+        <div className="nx-mobile-bonuses">
+          <span className="nx-mobile-bonuses__label">Бонусы</span>
+          <NavLink to="/referrals" onClick={closeMobileMenu}>Реферальная программа</NavLink>
+          <NavLink to="/loyalty" onClick={closeMobileMenu}>Бонусная система</NavLink>
+        </div>
         <a href="#support" className="js-support-open" onClick={(e) => { e.preventDefault(); setSupportOpen(true); }}>Поддержка</a>
         <NavLink to="/blogs" onClick={closeMobileMenu}>Блог</NavLink>
         <NavLink to="/accounts" onClick={closeMobileMenu}>Аккаунты</NavLink>

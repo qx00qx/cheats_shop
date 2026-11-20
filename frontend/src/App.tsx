@@ -15,6 +15,9 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 import ReferralPage from "./pages/ReferralPage";
+import ReferralProgramPage from "./pages/ReferralProgramPage";
+import PartnershipPage from "./pages/PartnershipPage";
+import LoyaltyPage from "./pages/LoyaltyPage";
 import BalancePage from "./pages/BalancePage";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
@@ -121,6 +124,9 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/referrals" element={<ReferralProgramPage />} />
+          <Route path="/partnership" element={<PartnershipPage />} />
+          <Route path="/loyalty" element={<LoyaltyPage />} />
           <Route
             path="/2fa"
             element={

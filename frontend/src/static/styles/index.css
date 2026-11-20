@@ -30,6 +30,7 @@
 @import './pages/accounts.css';
 @import './pages/status.css';
 @import './pages/profile.css';
+@import './pages/bonuses.css';
 
 /* Homepage styles */
 @import './homepage.css';
