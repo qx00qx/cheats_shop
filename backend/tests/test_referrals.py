@@ -67,6 +67,10 @@ def test_referral_link_is_generated_and_attributes_new_registration(monkeypatch)
             f"/register?ref={first.json()['code']}"
         )
         assert first.json()["commission_percent"] == 5
+        bonuses = client.get("/api/bonuses/me")
+        assert bonuses.status_code == 200
+        assert bonuses.json()["discount_percent"] == 0
+        assert bonuses.json()["progress_percent"] == 0
 
         registration = client.post("/api/auth/register", json={
             "email": "invited@example.com",

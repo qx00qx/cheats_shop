@@ -4,6 +4,9 @@ export type ReferralSummary = {
   code: string;
   link: string;
   commission_percent: number;
+  first_purchase_discount_percent: number;
+  first_purchase_discount_available: boolean;
+  first_purchase_discount_used: boolean;
   invited_count: number;
   purchases_count: number;
   earned_total: number;

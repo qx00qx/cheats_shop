@@ -295,7 +295,7 @@ def test_referred_platega_purchase_credits_referrer_once(monkeypatch):
     headers = {"X-MerchantId": "merchant-test", "X-Secret": "secret-test"}
     callback = {
         "id": "referred-paid-transaction",
-        "amount": 105,
+        "amount": 99.75,
         "currency": "RUB",
         "status": "CONFIRMED",
         "paymentMethod": 2,
@@ -351,9 +351,10 @@ def test_referred_platega_purchase_credits_referrer_once(monkeypatch):
         with session_factory() as db:
             referrer = db.get(User, referrer_id)
             earnings = db.query(ReferralEarning).all()
-            assert referrer.balance == "5.00"
+            assert referrer.balance == "4.75"
             assert len(earnings) == 1
-            assert earnings[0].commission_amount == 5
+            assert earnings[0].sale_amount == 95
+            assert earnings[0].commission_amount == 4.75
     finally:
         client.close()
         app.dependency_overrides.clear()

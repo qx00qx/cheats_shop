@@ -9,7 +9,7 @@ from redis.exceptions import RedisError
 from app.config import settings
 from app.database import Base, engine
 from app import models
-from app.api.routes import accounting, auth, catalog, products, orders, payments, reviews, blog, emailer, accounts, admin, homepage, uploads, feature_categories, seo, referrals
+from app.api.routes import accounting, auth, catalog, products, orders, payments, reviews, blog, emailer, accounts, admin, homepage, uploads, feature_categories, seo, referrals, bonuses
 from app.services.registration_rate_limit import check_registration_rate_limit, close_registration_rate_limiter
 from app.storage import UPLOADS_DIR
 
@@ -72,9 +72,33 @@ try:
         conn.execute(text("""
             ALTER TABLE users
             ADD COLUMN IF NOT EXISTS discount_percent INTEGER NOT NULL DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS total_spent NUMERIC(14, 2) NOT NULL DEFAULT 0,
+            ADD COLUMN IF NOT EXISTS referral_discount_used BOOLEAN NOT NULL DEFAULT FALSE,
             ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0,
             ADD COLUMN IF NOT EXISTS referral_code VARCHAR(32),
             ADD COLUMN IF NOT EXISTS referred_by INTEGER REFERENCES users(id) ON DELETE SET NULL
+        """))
+        conn.execute(text("""
+            UPDATE users u
+            SET total_spent = (
+                SELECT COALESCE(SUM(o.total), 0)
+                FROM orders o
+                WHERE o.user_id = u.id
+                  AND o.status IN ('paid', 'completed', 'paid_no_stock')
+            ) + (
+                SELECT COALESCE(SUM(bo.amount), 0)
+                FROM bot_orders bo
+                WHERE bo.site_user_id = u.id
+                  AND bo.status IN ('new', 'paid', 'completed', 'paid_no_stock')
+            )
+        """))
+        conn.execute(text("""
+            UPDATE users
+            SET discount_percent = LEAST(10, FLOOR(total_spent / 1000))::INTEGER,
+                referral_discount_used = CASE
+                    WHEN total_spent > 0 THEN TRUE
+                    ELSE referral_discount_used
+                END
         """))
         conn.execute(text("""
             CREATE UNIQUE INDEX IF NOT EXISTS ix_users_referral_code
@@ -349,6 +373,7 @@ app.include_router(uploads.router)
 app.include_router(feature_categories.router)
 app.include_router(seo.router)
 app.include_router(referrals.router)
+app.include_router(bonuses.router)
 
 
 @app.on_event("shutdown")

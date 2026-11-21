@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { ACCOUNT_RETURN_LOCATION_KEY } from "./AccountReturnLocationTracker";
 
-type AccountSection = "profile" | "balance" | "history" | "referrals";
+type AccountSection = "profile" | "balance" | "history" | "bonuses" | "referrals";
 
 type AccountLayoutProps = {
   activeSection: AccountSection;
@@ -13,6 +13,7 @@ const accountLinks: { to: string; label: string; section: AccountSection }[] = [
   { to: "/profile", label: "Профиль", section: "profile" },
   { to: "/profile/balance", label: "Пополнить баланс", section: "balance" },
   { to: "/profile/history", label: "История покупок", section: "history" },
+  { to: "/profile/bonuses", label: "Бонусы", section: "bonuses" },
   { to: "/profile/referrals", label: "Реферальная программа", section: "referrals" },
 ];
 

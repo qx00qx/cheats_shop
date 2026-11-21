@@ -76,6 +76,12 @@ export default function RegisterPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
+        {searchParams.get("ref") && (
+          <div className="registration-referral-bonus">
+            По реферальной ссылке вы получите скидку <strong>5% на первую покупку</strong>.
+          </div>
+        )}
+
         {err && <div className="error" role="alert" aria-live="polite">{err}</div>}
 
         <button className="btn-primary" type="submit" disabled={submitting}>

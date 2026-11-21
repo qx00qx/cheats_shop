@@ -20,6 +20,8 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     balance: Mapped[str] = mapped_column(String(32), default="0")
     discount_percent: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    total_spent: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=0, server_default="0")
+    referral_discount_used: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     referral_code: Mapped[str | None] = mapped_column(String(32), unique=True, nullable=True)
     referred_by: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"),

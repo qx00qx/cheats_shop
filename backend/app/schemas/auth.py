@@ -18,6 +18,8 @@ class UserOut(BaseModel):
     username: str
     balance: float
     discount_percent: int = 0
+    total_spent: float = 0
+    referral_discount_available: bool = False
     is_admin: bool
 
     class Config:

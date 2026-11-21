@@ -8,6 +8,7 @@ from app.config import settings
 from app.database import get_db
 from app.models import User
 from app.services.referrals import ensure_referral_code, referral_summary
+from app.services.user_discount import referral_first_purchase_available
 
 router = APIRouter(prefix="/api/referrals", tags=["referrals"])
 
@@ -32,5 +33,8 @@ def get_my_referral(
         "code": code,
         "link": f"{settings.SITE_URL.rstrip('/')}/register?ref={quote(code)}",
         "commission_percent": 5,
+        "first_purchase_discount_percent": 5 if user.referred_by else 0,
+        "first_purchase_discount_available": referral_first_purchase_available(user),
+        "first_purchase_discount_used": bool(user.referral_discount_used),
         **referral_summary(db, user.id),
     }

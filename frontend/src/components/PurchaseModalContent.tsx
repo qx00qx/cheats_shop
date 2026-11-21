@@ -46,6 +46,7 @@ export default function PurchaseModalContent({ item, tariff, accountId }: Props)
     user?.discount_percent,
     tariff.promo_discount_percent,
     tariff.promo_expires_at,
+    user?.referral_discount_available,
   );
   const price = applyDiscount(tariff.price, discountPercent);
   const shortfall = Math.max(0, Math.ceil(price - balance));

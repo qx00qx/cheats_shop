@@ -21,6 +21,7 @@ from app.core.security import (
     decode_token,
 )
 from app.services.password_reset_email import send_password_reset_email
+from app.services.user_discount import referral_first_purchase_available
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 logger = logging.getLogger(__name__)
@@ -95,6 +96,8 @@ def user_to_dict(user: User) -> dict:
         "username": user.username,
         "balance": balance,
         "discount_percent": user.discount_percent,
+        "total_spent": float(user.total_spent or 0),
+        "referral_discount_available": referral_first_purchase_available(user),
         "is_admin": user.is_admin,
         "is_active": user.is_active,
         "created_at": _serialize_created_at(user.__dict__.get("created_at")),

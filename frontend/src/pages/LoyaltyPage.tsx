@@ -7,47 +7,47 @@ import {
   BonusSteps,
 } from "../components/BonusBlocks";
 
-const loyaltyLevels = [
-  { number: "01", name: "Новичок", threshold: "С первой покупки", percent: 3, reward: 30 },
-  { number: "02", name: "Игрок", threshold: "От 1 500 ₽ покупок", percent: 5, reward: 50 },
-  { number: "03", name: "Ветеран", threshold: "От 5 000 ₽ покупок", percent: 7, reward: 70 },
-  { number: "04", name: "Легенда", threshold: "От 15 000 ₽ покупок", percent: 10, reward: 100 },
+const discountLevels = [
+  { number: "01", name: "Старт", threshold: "Первая покупка", percent: 0, note: "Скидка начнёт расти после покупок" },
+  { number: "02", name: "Первый процент", threshold: "1 000 ₽ покупок", percent: 1, note: "+1% за каждую полную тысячу" },
+  { number: "03", name: "На полпути", threshold: "5 000 ₽ покупок", percent: 5, note: "Скидка 5% на следующие заказы" },
+  { number: "04", name: "Максимум", threshold: "10 000 ₽ покупок", percent: 10, note: "Максимальная скидка достигнута" },
 ];
 
 const loyaltySteps = [
   {
     number: "01",
     title: "Покупаете",
-    text: "Выбирайте нужный продукт и оплачивайте заказ как обычно. Сумма покупки учитывается в общем прогрессе уровня.",
+    text: "Выбирайте товары и оплачивайте заказы как обычно. В прогресс идёт фактически потраченная сумма.",
   },
   {
     number: "02",
-    title: "Получаете бонусы",
-    text: "После успешной выдачи заказа на бонусный счёт возвращается от 3 до 10% его стоимости.",
+    title: "Копите сумму покупок",
+    text: "Каждая полная 1 000 ₽ добавляет 1% к вашей накопительной скидке. Ничего активировать не нужно.",
   },
   {
     number: "03",
-    title: "Тратите, когда хотите",
-    text: "Используйте накопления при следующей оплате или продолжайте копить. Один бонус равен одному рублю.",
+    title: "Экономите автоматически",
+    text: "Скидка сама применяется к следующим заказам. При тратах от 10 000 ₽ она достигает максимума — 10%.",
   },
 ];
 
 const loyaltyFaq = [
   {
-    question: "Сколько стоит один бонус?",
-    answer: "1 бонус равен 1 ₽. Если на счёте 300 бонусов, ими можно уменьшить стоимость заказа на 300 ₽ с учётом ограничения на оплату бонусами.",
+    question: "Как увеличить накопительную скидку?",
+    answer: "Просто совершайте покупки. Каждые полные 1 000 ₽ из фактически потраченной суммы добавляют 1%. Например, при тратах 2 500 ₽ ваша скидка составит 2%.",
   },
   {
-    question: "Можно получить и потратить бонусы в одном заказе?",
-    answer: "Нет. При оплате вы выбираете один вариант: списать накопленные бонусы или получить новые за этот заказ.",
+    question: "Нужно ли вводить промокод?",
+    answer: "Нет. Накопительная скидка применяется автоматически при оформлении заказа для авторизованного пользователя.",
   },
   {
-    question: "Учитываются ли прошлые покупки?",
-    answer: "Для уровня учитывается общая сумма покупок за всё время. Чем больше сумма, тем выше процент начисления на следующие заказы.",
+    question: "Когда будет максимальная скидка?",
+    answer: "Когда сумма ваших покупок достигнет 10 000 ₽. После этого скидка составит 10% и не будет зависеть от количества отдельных заказов.",
   },
   {
-    question: "Можно вывести или передать бонусы?",
-    answer: "Нет. Бонусы не являются денежными средствами: они предназначены только для оплаты части заказов на сайте.",
+    question: "Где посмотреть текущий прогресс?",
+    answer: "В личном кабинете откройте раздел «Бонусы». Там видны потраченная сумма, текущий процент и сумма до следующего процента.",
   },
 ];
 
@@ -56,56 +56,56 @@ export default function LoyaltyPage() {
     <div className="bonus-page loyalty-page">
       <Seo
         pageKey="loyalty"
-        title="Бонусная система"
-        description="Бонусная система Millex: получайте от 3 до 10% за покупки, повышайте уровень и оплачивайте бонусами следующие заказы."
+        title="Накопительная скидка"
+        description="Каждые 1 000 ₽ покупок в Millex добавляют 1% к накопительной скидке. Максимум 10% при тратах от 10 000 ₽."
         canonicalPath="/loyalty"
       />
 
       <BonusHero
         kicker="Millex loyalty"
-        title={<>Покупки<br /><span>приносят бонусы</span></>}
-        lead="Часть суммы заказа возвращается на ваш бонусный счёт. Повышайте уровень, копите бонусы и экономьте на следующих покупках."
+        title={<>Больше покупок.<br /><span>Больше скидка</span></>}
+        lead="Каждые 1 000 ₽, потраченные на заказы, добавляют 1% к вашей скидке. Она растёт до 10% и автоматически применяется к новым покупкам."
         actions={(
           <>
-            <Link to="/catalog" className="bonus-button bonus-button--primary">
-              Перейти в каталог <span aria-hidden="true">↗</span>
+            <Link to="/profile/bonuses" className="catalog-hero-button">
+              Мой прогресс <span aria-hidden="true">↗</span>
             </Link>
-            <a href="#loyalty-levels" className="bonus-button bonus-button--secondary">Посмотреть уровни</a>
+            <a href="#loyalty-levels" className="bonus-button btn-ghost">Как растёт скидка</a>
           </>
         )}
         visual={(
-          <div className="loyalty-example" aria-label="Пример начисления бонусов">
+          <div className="loyalty-example" aria-label="Пример накопительной скидки">
             <div className="loyalty-example__heading">
-              <span>Пример начисления</span>
-              <span className="loyalty-example__badge">Ветеран</span>
+              <span>Пример прогресса</span>
+              <span className="loyalty-example__badge">Автоматически</span>
             </div>
             <div className="loyalty-example__balance">
-              <span>За заказ на 1 000 ₽</span>
-              <strong>+70 <small>бонусов</small></strong>
-              <span className="loyalty-example__rate">Кэшбэк 7% на уровне «Ветеран»</span>
+              <span>Потрачено на покупки: 4 000 ₽</span>
+              <strong>4<small>%</small></strong>
+              <span className="loyalty-example__rate">Скидка на следующие заказы</span>
             </div>
             <div className="loyalty-example__conversion">
-              <span>1 бонус</span><i>=</i><strong>1 ₽</strong>
+              <span>Заказ на 500 ₽</span><i>=</i><strong>Экономия 20 ₽</strong>
             </div>
             <div className="loyalty-example__footer">
-              <span>Следующий уровень</span>
-              <strong>10% кэшбэк</strong>
-              <div><i /></div>
+              <span>До скидки 5%</span>
+              <strong>Ещё 1 000 ₽</strong>
+              <div><i style={{ width: "40%" }} /></div>
             </div>
           </div>
         )}
         stats={[
-          { value: "3–10%", label: "возврат с заказа" },
-          { value: "1 бонус = 1 ₽", label: "простой расчёт выгоды" },
-          { value: "До 50%", label: "заказа можно оплатить бонусами" },
+          { value: "1 000 ₽ = 1%", label: "за каждую полную тысячу" },
+          { value: "10 000 ₽ = 10%", label: "максимальная скидка" },
+          { value: "Автоматически", label: "без промокода при оформлении" },
         ]}
       />
 
       <section className="bonus-section bonus-container">
         <BonusSectionHeading
           kicker="Как это работает"
-          title="Выгода после каждой покупки"
-          description="Бонусы начисляются по вашему текущему уровню."
+          title="Скидка растёт вместе с покупками"
+          description="Ваш прогресс всегда можно проверить в разделе «Бонусы»."
         />
         <BonusSteps steps={loyaltySteps} />
       </section>
@@ -113,12 +113,12 @@ export default function LoyaltyPage() {
       <section className="bonus-section bonus-container" id="loyalty-levels">
         <BonusSectionHeading
           row
-          kicker="Четыре уровня"
-          title="Больше покупок — выше кэшбэк"
-          description="Уровень зависит от суммы всех ваших покупок. Прошлые заказы тоже учитываются."
+          kicker="Шкала скидки"
+          title="Каждая тысяча добавляет процент"
+          description="Учитывается вся фактически потраченная сумма. Для роста не важно, один это заказ или несколько."
         />
         <div className="loyalty-levels">
-          {loyaltyLevels.map((level) => (
+          {discountLevels.map((level) => (
             <article className="loyalty-level" key={level.name}>
               <div className="loyalty-level__top">
                 <span>{level.number}</span>
@@ -127,10 +127,9 @@ export default function LoyaltyPage() {
               <h3>{level.name}</h3>
               <p>{level.threshold}</p>
               <strong className="loyalty-level__percent">{level.percent}<span>%</span></strong>
-              <span className="loyalty-level__caption">кэшбэк бонусами</span>
+              <span className="loyalty-level__caption">накопительная скидка</span>
               <div className="loyalty-level__reward">
-                <strong>+{level.reward} бонусов</strong>
-                <span>с заказа на 1 000 ₽</span>
+                <strong>{level.note}</strong>
               </div>
             </article>
           ))}
@@ -138,32 +137,32 @@ export default function LoyaltyPage() {
       </section>
 
       <section className="bonus-section bonus-container">
-        <BonusSectionHeading kicker="Копить или тратить" title="Выбор за вами при каждой оплате" />
+        <BonusSectionHeading kicker="Простой расчёт" title="Как скидка работает на практике" />
         <div className="loyalty-spend-grid">
           <article className="loyalty-spend-card">
-            <span className="bonus-card-label">Копить</span>
-            <h3>+3–10% от суммы заказа</h3>
-            <p>Оплатите полную стоимость без списания бонусов, и после выдачи заказа получите награду по своему уровню.</p>
+            <span className="bonus-card-label">Накопление</span>
+            <h3>2 500 ₽ потрачено</h3>
+            <p>Две полные тысячи дают 2%. Оставшиеся 500 ₽ не пропадают и учитываются на пути к следующему проценту.</p>
             <div className="loyalty-spend-card__example">
-              <span>Заказ на 1 000 ₽</span><strong>от +30 до +100 бонусов</strong>
+              <span>Текущая скидка</span><strong>2%</strong>
             </div>
           </article>
           <article className="loyalty-spend-card">
-            <span className="bonus-card-label">Тратить</span>
-            <h3>До 50% заказа бонусами</h3>
-            <p>Списывайте накопления для скидки. В заказе, где вы тратите бонусы, новые бонусы не начисляются.</p>
+            <span className="bonus-card-label">Применение</span>
+            <h3>Заказ на 1 000 ₽</h3>
+            <p>При накопительной скидке 2% новый заказ автоматически станет дешевле. Отдельно активировать её не нужно.</p>
             <div className="loyalty-spend-card__example">
-              <span>Заказ на 1 000 ₽</span><strong>до 500 ₽ бонусами</strong>
+              <span>К оплате</span><strong>980 ₽ вместо 1 000 ₽</strong>
             </div>
           </article>
         </div>
         <div className="loyalty-notice">
           <strong>Важно знать</strong>
           <ul>
-            <li>Бонусы действуют 60 дней с момента начисления.</li>
-            <li>Сначала расходуются бонусы с самым ранним сроком начисления.</li>
-            <li>Бонусы нельзя вывести на карту или передать другому пользователю.</li>
-            <li>При списании бонусов новые бонусы за тот же заказ не начисляются.</li>
+            <li>Учитывается сумма успешно оплаченных покупок.</li>
+            <li>Каждая полная 1 000 ₽ добавляет 1% к скидке.</li>
+            <li>Скидка применяется автоматически для авторизованного пользователя.</li>
+            <li>Максимальная накопительная скидка — 10% при тратах от 10 000 ₽.</li>
           </ul>
         </div>
       </section>
@@ -181,12 +180,12 @@ export default function LoyaltyPage() {
       </section>
 
       <BonusBottomCta
-        kicker="Создаёшь контент?"
-        title={<>Вступай в медиа-команду<br />Millex</>}
-        text="Получай бесплатные ключи для видео, оплату за просмотры и скидку 25% на каталог."
+        kicker="Ваши бонусы"
+        title={<>Проверьте, сколько осталось<br />до следующего процента</>}
+        text="В личном кабинете видны текущая скидка, потраченная сумма и прогресс до максимума."
         action={(
-          <Link to="/partnership" className="bonus-button bonus-button--primary">
-            Условия для авторов <span aria-hidden="true">→</span>
+          <Link to="/profile/bonuses" className="catalog-hero-button">
+            Открыть раздел «Бонусы» <span aria-hidden="true">→</span>
           </Link>
         )}
       />

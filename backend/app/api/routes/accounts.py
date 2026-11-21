@@ -14,7 +14,10 @@ from app.api.deps import get_current_user
 from app.database import get_db
 from app.models import BalanceAudit, BotOrder, User
 from app.services.nfa import NfaConfigurationError, nfa
-from app.services.user_discount import increase_user_discount
+from app.services.user_discount import (
+    effective_user_discount_percent,
+    record_successful_purchase,
+)
 from app.services.referrals import award_referral_commission
 from app.services.cheat_promotion import (
     discounted_cheat_price,
@@ -245,9 +248,12 @@ async def purchase_account(
     if not locked_user:
         raise HTTPException(401, "Пользователь не найден")
 
-    discount_percent = effective_cheat_discount_percent(
-        locked_user.discount_percent,
-        starts_at=get_promotion_start(db),
+    discount_percent = effective_user_discount_percent(
+        locked_user,
+        effective_cheat_discount_percent(
+            locked_user.discount_percent,
+            starts_at=get_promotion_start(db),
+        ),
     )
     price = discounted_cheat_price(
         Decimal(str(account_row["price"] or 0)),
@@ -299,7 +305,7 @@ async def purchase_account(
     )
     balance_after_payment = new_balance + cashback
     locked_user.balance = str(balance_after_payment)
-    increase_user_discount(locked_user)
+    record_successful_purchase(locked_user, price)
 
     db.add(BalanceAudit.for_balance_change(
         user_id=locked_user.id,

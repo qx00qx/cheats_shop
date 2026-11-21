@@ -68,6 +68,23 @@ export default function ReferralPage() {
             </section>
           )}
 
+          {summary.invited_by && (
+            <section className={`account-referral-bonus${summary.first_purchase_discount_available ? " is-active" : ""}`}>
+              <div>
+                <span className="account-bonus-card__label">Бонус за регистрацию по ссылке</span>
+                <h2>{summary.first_purchase_discount_percent}% на первую покупку</h2>
+                <p>
+                  {summary.first_purchase_discount_available
+                    ? "Скидка доступна и применится автоматически при оформлении первого заказа."
+                    : "Скидка на первую покупку использована. Ваши реферальные начисления за приглашения продолжают работать."}
+                </p>
+              </div>
+              <span className="account-referral-bonus__status">
+                {summary.first_purchase_discount_available ? "Доступна" : "Использована"}
+              </span>
+            </section>
+          )}
+
           <section className="referral-link-card" aria-labelledby="referral-link-title">
             <div className="referral-card-heading">
               <div>

@@ -1,5 +1,6 @@
 .bonus-page {
   position: relative;
+  display: flow-root;
   overflow: clip;
   background: radial-gradient(circle at 80% 4%, rgba(0, 255, 148, 0.055), transparent 28%), #060807;
   color: #f3f8f5;
@@ -75,45 +76,21 @@
   justify-content: center;
   gap: 18px;
   padding: 0 22px;
-  border: 1px solid transparent;
   border-radius: 12px;
   font-size: 13px;
   font-weight: 800;
   line-height: 1.2;
   text-decoration: none;
-  transition: transform 0.18s, border-color 0.18s, background 0.18s, box-shadow 0.18s;
-}
-
-.bonus-button:hover { transform: translateY(-2px); }
-
-.bonus-button--primary {
-  border-color: #00ff94;
-  background: #00ff94;
-  box-shadow: 0 10px 34px rgba(0, 255, 148, 0.1);
-  color: #06140d;
-}
-
-.bonus-button--primary:hover {
-  background: #42ffb2;
-  box-shadow: 0 12px 36px rgba(0, 255, 148, 0.2);
-}
-
-.bonus-button--secondary {
-  border-color: rgba(255, 255, 255, 0.11);
-  background: rgba(255, 255, 255, 0.035);
-  color: rgba(243, 248, 245, 0.76);
-}
-
-.bonus-button--secondary:hover {
-  border-color: rgba(0, 255, 148, 0.28);
-  background: rgba(0, 255, 148, 0.05);
-  color: #fff;
 }
 
 .bonus-button:focus-visible,
 .bonus-text-link:focus-visible {
   outline: 2px solid #eafff3;
   outline-offset: 4px;
+}
+
+.bonus-page .catalog-hero-button:hover {
+  color: #000000;
 }
 
 .bonus-hero__stats {

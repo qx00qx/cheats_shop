@@ -1,3 +1,4 @@
+from decimal import Decimal
 from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
@@ -80,7 +81,7 @@ def make_order_client(monkeypatch, *, with_stock_key):
     )
 
 
-def test_balance_purchase_assigns_key_and_increases_discount(monkeypatch):
+def test_balance_purchase_assigns_key_and_tracks_spent_amount(monkeypatch):
     engine, session_factory, client, previous, product_id, plan_id, user_id = (
         make_order_client(monkeypatch, with_stock_key=True)
     )
@@ -97,7 +98,8 @@ def test_balance_purchase_assigns_key_and_increases_discount(monkeypatch):
             user = db.get(User, user_id)
             order = db.query(Order).one()
             stock_key = db.query(Key).one()
-            assert user.discount_percent == 1
+            assert user.discount_percent == 0
+            assert user.total_spent == 100
             assert user.balance == "900.0"
             assert order.email_sent_at is None
             assert stock_key.status == "used"
@@ -134,12 +136,16 @@ def test_balance_purchase_credits_referrer_once(monkeypatch):
         })
 
         assert response.status_code == 201
+        assert response.json()["total"] == 95.0
         with session_factory() as db:
             referrer = db.get(User, referrer_id)
+            buyer = db.get(User, user_id)
             earning = db.query(ReferralEarning).one()
-            assert referrer.balance == "5.00"
-            assert earning.sale_amount == 100
-            assert earning.commission_amount == 5
+            assert referrer.balance == "4.75"
+            assert buyer.referral_discount_used is True
+            assert buyer.total_spent == 95
+            assert earning.sale_amount == 95
+            assert earning.commission_amount == Decimal("4.75")
             assert earning.source_type == "store_order"
     finally:
         client.close()

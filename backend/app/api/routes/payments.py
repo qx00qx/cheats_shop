@@ -35,7 +35,10 @@ from app.services.cheat_promotion import (
     effective_cheat_discount_percent,
     get_promotion_start,
 )
-from app.services.user_discount import increase_user_discount
+from app.services.user_discount import (
+    effective_user_discount_percent,
+    record_successful_purchase,
+)
 from app.services.referrals import (
     award_referral_commission,
     reverse_referral_commission,
@@ -745,7 +748,10 @@ async def platega_webhook(request: Request, db: Session = Depends(get_db)):
                             ctx=cashback_ctx,
                         ))
                 if account:
-                    increase_user_discount(account)
+                    record_successful_purchase(
+                        account,
+                        Decimal(str(bot_order.amount or 0)),
+                    )
             fulfill_bot_order(db, bot_order)
             record_bot_order_sale(db, bot_order)
             if account:
@@ -831,7 +837,7 @@ async def platega_webhook(request: Request, db: Session = Depends(get_db)):
         .first()
     )
     if account:
-        increase_user_discount(account)
+        record_successful_purchase(account, Decimal(str(order.total)))
     if account is None:
         order.status = "paid_no_stock"
     else:
@@ -903,6 +909,11 @@ async def create_item_purchase(
         locked_user.discount_percent if locked_user else 0,
         starts_at=get_promotion_start(db),
     )
+    if locked_user:
+        discount_percent = effective_user_discount_percent(
+            locked_user,
+            discount_percent,
+        )
     amount = discounted_cheat_price(
         Decimal(str(tariff["price"])),
         discount_percent,
@@ -923,7 +934,7 @@ async def create_item_purchase(
         cashback = purchase_cashback(amount)
         new_balance = debited_balance + cashback
         locked_user.balance = str(new_balance)
-        increase_user_discount(locked_user)
+        record_successful_purchase(locked_user, amount)
         db.add(BalanceAudit.for_balance_change(
             user_id=locked_user.id,
             old_balance=old_balance,

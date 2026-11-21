@@ -249,6 +249,7 @@ export default function ItemPage() {
     loyaltyDiscountPercent,
     item?.promo_discount_percent,
     item?.promo_expires_at,
+    user?.referral_discount_available,
   );
   const discountedPrice = (price: number) => applyDiscount(price, discountPercent);
 

@@ -6,6 +6,8 @@ export type User = {
   username: string;
   balance: number;
   discount_percent: number;
+  total_spent: number;
+  referral_discount_available: boolean;
   is_admin: boolean;
   is_active: boolean;
 };

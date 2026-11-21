@@ -82,10 +82,10 @@ export default function PartnershipPage() {
         lead="Создавай контент о любимых играх вместе с Millex. Мы даём продукты для записи видео, платим за просмотры и открываем особые привилегии для авторов."
         actions={(
           <>
-            <a href="https://t.me/millex" target="_blank" rel="noreferrer" className="bonus-button bonus-button--primary">
+            <a href="https://t.me/millex" target="_blank" rel="noreferrer" className="catalog-hero-button">
               Подать заявку <span aria-hidden="true">↗</span>
             </a>
-            <a href="#media-team" className="bonus-button bonus-button--secondary">Что мы предлагаем</a>
+            <a href="#media-team" className="bonus-button btn-ghost">Что мы предлагаем</a>
           </>
         )}
         visual={(
@@ -173,7 +173,7 @@ export default function PartnershipPage() {
         title={<>Создавай контент.<br />Зарабатывай на том, что любишь.</>}
         text="Отправь ссылку на канал и примеры работ — мы рассмотрим заявку и свяжемся с тобой."
         action={(
-          <a href="https://t.me/millex" target="_blank" rel="noreferrer" className="bonus-button bonus-button--primary">
+          <a href="https://t.me/millex" target="_blank" rel="noreferrer" className="catalog-hero-button">
             Написать @millex <span aria-hidden="true">↗</span>
           </a>
         )}

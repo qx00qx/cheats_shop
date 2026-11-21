@@ -28,6 +28,7 @@ export default function CartPage() {
     user?.discount_percent,
     promotion?.active ? promotion.discount_percent : 0,
     promotion?.ends_at,
+    user?.referral_discount_available,
   );
   const promotionActive = Boolean(
     promotion?.active && Date.now() < new Date(promotion.ends_at).getTime(),
@@ -88,7 +89,9 @@ export default function CartPage() {
             </div>
             {discountPercent > 0 && (
               <p className="muted" style={{ marginTop: 8 }}>
-                {promotionActive ? "Акционная скидка" : "Накопительная скидка"}: {discountPercent}%
+                {user?.referral_discount_available && !promotionActive
+                  ? "Скидка на первую покупку"
+                  : promotionActive ? "Акционная скидка" : "Накопительная скидка"}: {discountPercent}%
               </p>
             )}
           </div>

@@ -2,6 +2,7 @@ export function getCheatDiscountPercent(
   loyaltyDiscountPercent: number | null | undefined,
   promoDiscountPercent: number | null | undefined,
   promoExpiresAt?: string | null,
+  referralDiscountAvailable = false,
 ): number {
   const promoIsActive = Boolean(
     promoDiscountPercent &&
@@ -9,7 +10,11 @@ export function getCheatDiscountPercent(
     Date.now() < new Date(promoExpiresAt).getTime()
   );
   const loyaltyDiscount = Math.min(10, Math.max(0, loyaltyDiscountPercent ?? 0));
-  return Math.max(loyaltyDiscount, promoIsActive ? promoDiscountPercent ?? 0 : 0);
+  return Math.max(
+    loyaltyDiscount,
+    promoIsActive ? promoDiscountPercent ?? 0 : 0,
+    referralDiscountAvailable ? 5 : 0,
+  );
 }
 
 export function applyDiscount(price: number, discountPercent: number): number {

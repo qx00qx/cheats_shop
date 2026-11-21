@@ -13,7 +13,10 @@ from app.services.platega import platega
 from app.services.order_delivery import (
     fulfill_store_order,
 )
-from app.services.user_discount import increase_user_discount
+from app.services.user_discount import (
+    effective_user_discount_percent,
+    record_successful_purchase,
+)
 from app.services.referrals import award_referral_commission
 from app.services.cheat_promotion import (
     discounted_cheat_price,
@@ -54,9 +57,12 @@ async def create_order(
         .first()
     )
     promotion_start = get_promotion_start(db)
-    discount_percent = effective_cheat_discount_percent(
-        locked_user.discount_percent,
-        starts_at=promotion_start,
+    discount_percent = effective_user_discount_percent(
+        locked_user,
+        effective_cheat_discount_percent(
+            locked_user.discount_percent,
+            starts_at=promotion_start,
+        ),
     )
 
     total = 0
@@ -99,7 +105,7 @@ async def create_order(
         locked_user.balance = old - total
         order.status = "paid"
         order.paid_at = datetime.now(timezone.utc)
-        increase_user_discount(locked_user)
+        record_successful_purchase(locked_user, Decimal(str(order.total)))
         fulfill_store_order(db, order, locked_user)
         award_referral_commission(
             db,

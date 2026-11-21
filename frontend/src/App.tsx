@@ -18,6 +18,7 @@ import ReferralPage from "./pages/ReferralPage";
 import ReferralProgramPage from "./pages/ReferralProgramPage";
 import PartnershipPage from "./pages/PartnershipPage";
 import LoyaltyPage from "./pages/LoyaltyPage";
+import BonusesPage from "./pages/BonusesPage";
 import BalancePage from "./pages/BalancePage";
 import OrderHistoryPage from "./pages/OrderHistoryPage";
 import PaymentSuccessPage from "./pages/PaymentSuccessPage";
@@ -113,6 +114,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <OrderHistoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/bonuses"
+            element={
+              <ProtectedRoute>
+                <BonusesPage />
               </ProtectedRoute>
             }
           />

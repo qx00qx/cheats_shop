@@ -71,13 +71,13 @@ export default function ReferralProgramPage() {
       <BonusHero
         kicker="Millex referrals"
         title={<>Реферальная<br /><span>программа</span></>}
-        lead="Делитесь Millex с друзьями и получайте 5% с каждой их успешной покупки. Вознаграждение зачисляется на ваш баланс и доступно для новых заказов."
+        lead="Делитесь Millex с друзьями: вы получаете 5% с каждой их успешной покупки, а друг получает скидку 5% на свой первый заказ."
         actions={(
           <>
-            <Link to="/profile/referrals" className="bonus-button bonus-button--primary">
+            <Link to="/profile/referrals" className="catalog-hero-button">
               Получить ссылку <span aria-hidden="true">↗</span>
             </Link>
-            <a href="#how-referrals-work" className="bonus-button bonus-button--secondary">Как это работает</a>
+            <a href="#how-referrals-work" className="bonus-button btn-ghost">Как это работает</a>
           </>
         )}
         visual={(
@@ -85,14 +85,14 @@ export default function ReferralProgramPage() {
             label="Вознаграждение"
             status="Программа активна"
             rate="5%"
-            rateText={<>с каждой успешной покупки<br />приглашённого друга</>}
+            rateText={<>вам с каждой покупки друга<br />и другу на первый заказ</>}
             events={referralEvents}
             ariaLabel="Пример работы реферальной программы"
           />
         )}
         stats={[
-          { value: "5%", label: "с покупки приглашённого друга" },
-          { value: "Каждый заказ", label: "не только первая покупка" },
+          { value: "5% вам", label: "с каждой покупки друга" },
+          { value: "5% другу", label: "скидка на первую покупку" },
           { value: "На баланс", label: "начисление в личном кабинете" },
         ]}
       />
@@ -121,8 +121,8 @@ export default function ReferralProgramPage() {
             highlight={<><strong>5%</strong><span>от суммы успешного заказа<br />на ваш баланс</span></>}
             items={[
               "Комиссия начисляется с каждой успешной покупки",
+              "Друг получает скидку 5% на первую покупку",
               "Награда поступает на баланс аккаунта",
-              "Баланс можно использовать для новых заказов",
             ]}
             link={cabinetLink("Перейти к своей ссылке")}
           />
@@ -151,7 +151,7 @@ export default function ReferralProgramPage() {
         title={<>Пригласите друга.<br />Получите первую награду.</>}
         text="Скопируйте персональную ссылку в личном кабинете и поделитесь ею."
         action={(
-          <Link to="/profile/referrals" className="bonus-button bonus-button--primary">
+          <Link to="/profile/referrals" className="catalog-hero-button">
             Открыть кабинет <span aria-hidden="true">→</span>
           </Link>
         )}

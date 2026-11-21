@@ -34,6 +34,7 @@ export default function CheckoutPage() {
     user?.discount_percent,
     promotion?.active ? promotion.discount_percent : 0,
     promotion?.ends_at,
+    user?.referral_discount_available,
   );
   const isPromotionActive = Boolean(
     promotion?.active && Date.now() < new Date(promotion.ends_at).getTime(),
@@ -91,7 +92,11 @@ export default function CheckoutPage() {
         <hr style={{ borderColor: "var(--border-color)", margin: "12px 0" }} />
         {discountPercent > 0 && (
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-            <span>{isPromotionActive ? "Акционная скидка" : "Накопительная скидка"}</span>
+            <span>
+              {user?.referral_discount_available && !isPromotionActive
+                ? "Скидка на первую покупку"
+                : isPromotionActive ? "Акционная скидка" : "Накопительная скидка"}
+            </span>
             <span className="rating">{discountPercent}%</span>
           </div>
         )}
